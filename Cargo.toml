@@ -1,0 +1,10 @@
+[package]
+name = "hermit-entry"
+version = "0.1.0"
+authors = ["Martin Kröning <mkroening@posteo.net>"]
+edition = "2021"
+description = "RustyHermit's entry API."
+repository = "https://github.com/hermitcore/hermit-entry"
+license = "MIT OR Apache-2.0"
+keywords = ["hermit", "unikernel"]
+categories = ["api-bindings", "no-std", "virtualization"]
