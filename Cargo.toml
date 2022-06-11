@@ -8,3 +8,7 @@ repository = "https://github.com/hermitcore/hermit-entry"
 license = "MIT OR Apache-2.0"
 keywords = ["hermit", "unikernel"]
 categories = ["api-bindings", "no-std", "virtualization"]
+
+[features]
+default = []
+loader = []
