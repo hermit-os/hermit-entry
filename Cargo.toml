@@ -9,6 +9,10 @@ license = "MIT OR Apache-2.0"
 keywords = ["hermit", "unikernel"]
 categories = ["api-bindings", "no-std", "virtualization"]
 
+[dependencies]
+memoffset = { version = "0.6", features = ["unstable_const"], optional = true }
+
 [features]
 default = []
 loader = []
+kernel = ["memoffset"]

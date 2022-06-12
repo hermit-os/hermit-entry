@@ -1,12 +1,20 @@
 //! # RustyHermit's entry API.
 
 #![no_std]
+#![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
+#![cfg_attr(feature = "kernel", feature(core_intrinsics))]
 
 #[cfg(feature = "loader")]
 mod loader;
 
 #[cfg(feature = "loader")]
 pub use loader::Entry;
+
+#[cfg(feature = "kernel")]
+mod kernel;
+
+#[cfg(feature = "kernel")]
+pub use kernel::ParseHeaderError;
 
 #[cfg(target_arch = "x86_64")]
 type SerialPortBase = u16;
