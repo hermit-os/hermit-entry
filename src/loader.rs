@@ -42,6 +42,7 @@ impl Default for NetInfo {
     }
 }
 
+#[allow(clippy::derivable_impls)] // This is feature-gated
 impl Default for TlsInfo {
     fn default() -> Self {
         Self {
