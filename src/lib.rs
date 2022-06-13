@@ -3,6 +3,7 @@
 #![no_std]
 #![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
 #![cfg_attr(feature = "kernel", feature(core_intrinsics))]
+#![warn(unsafe_op_in_unsafe_fn)]
 
 #[cfg(feature = "loader")]
 mod loader;

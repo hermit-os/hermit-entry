@@ -46,20 +46,62 @@ impl RawBootInfo {
         memoffset::offset_of!(Self, current_stack_address)
     }
 
+    /// Returns `None` if the boot info's magic number and version match, or else returns a shared
+    /// reference to the boot info wrapped in `Some`.
+    ///
+    /// # Safety
+    ///
+    /// When calling this method, you have to ensure that all of the following is true:
+    ///
+    /// * The pointer must be properly aligned.
+    ///
+    /// * The magic number and the version's fields must be "dereferenceable" in the sense defined
+    ///   in [`core::ptr#safety`].
+    ///
+    /// * If the magic number and the version match, the pointer must be "dereferenceable" as a whole.
+    ///
+    /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+    ///   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+    ///   In particular, for the duration of this lifetime, the memory the pointer points to must
+    ///   not get mutated (except inside `UnsafeCell`).
+    ///
+    /// This applies even if the result of this method is unused!
     pub unsafe fn try_from_ptr<'a>(this: *const Self) -> Result<&'a Self, ParseHeaderError> {
+        #[derive(Clone, Copy)]
+        #[repr(C)]
+        struct RawBootInfoHeader {
+            magic_number: u32,
+            version: u32,
+        }
+
+        let RawBootInfoHeader {
+            magic_number,
+            version,
+        } = unsafe {
+            // SAFETY: The caller must guarantee that `this` meets all the requirements to be
+            // dereferenced as `RawBootInfoHeader`.
+            *this.cast()
+        };
+
         let expected = Self::MAGIC_NUMBER;
-        let found = (*this).magic_number;
-        if found != expected {
-            return Err(ParseHeaderError::InvalidMagicNumber { expected, found });
+        if magic_number != expected {
+            return Err(ParseHeaderError::InvalidMagicNumber {
+                expected,
+                found: magic_number,
+            });
         }
 
         let expected = Self::VERSION;
-        let found = (*this).version;
-        if found != expected {
-            return Err(ParseHeaderError::InvalidVersion { expected, found });
+        if version != expected {
+            return Err(ParseHeaderError::InvalidVersion {
+                expected,
+                found: version,
+            });
         }
 
-        Ok(&*this)
+        // SAFETY: The caller must guarantee that `this` meets all the requirements to be
+        // dereferenced, since magic number and version match.
+        unsafe { Ok(&*this) }
     }
 
     pub fn increment_cpu_online(&self) {
