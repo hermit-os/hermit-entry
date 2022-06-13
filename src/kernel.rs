@@ -83,20 +83,12 @@ impl RawBootInfo {
             *this.cast()
         };
 
-        let expected = Self::MAGIC_NUMBER;
-        if magic_number != expected {
-            return Err(ParseHeaderError::InvalidMagicNumber {
-                expected,
-                found: magic_number,
-            });
+        if magic_number != Self::MAGIC_NUMBER {
+            return Err(ParseHeaderError::InvalidMagicNumber { magic_number });
         }
 
-        let expected = Self::VERSION;
-        if version != expected {
-            return Err(ParseHeaderError::InvalidVersion {
-                expected,
-                found: version,
-            });
+        if version != Self::VERSION {
+            return Err(ParseHeaderError::InvalidVersion { version });
         }
 
         // SAFETY: The caller must guarantee that `this` meets all the requirements to be
@@ -143,23 +135,25 @@ impl RawBootInfo {
 
 #[derive(Debug)]
 pub enum ParseHeaderError {
-    InvalidMagicNumber { expected: u32, found: u32 },
-    InvalidVersion { expected: u32, found: u32 },
+    InvalidMagicNumber { magic_number: u32 },
+    InvalidVersion { version: u32 },
 }
 
 impl fmt::Display for ParseHeaderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseHeaderError::InvalidMagicNumber { expected, found } => {
+            ParseHeaderError::InvalidMagicNumber { magic_number } => {
+                let expected = RawBootInfo::MAGIC_NUMBER;
                 write!(
                     f,
-                    "invalid magic number (expected {expected:?}, found {found:?})"
+                    "invalid magic number (expected {expected:?}, found {magic_number:?})"
                 )
             }
-            ParseHeaderError::InvalidVersion { expected, found } => {
+            ParseHeaderError::InvalidVersion { version } => {
+                let expected = RawBootInfo::VERSION;
                 write!(
                     f,
-                    "invalid version (expected {expected:?}, found {found:?})"
+                    "invalid version (expected {expected:?}, found {version:?})"
                 )
             }
         }
