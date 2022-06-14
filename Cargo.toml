@@ -16,6 +16,7 @@ targets = [
     "x86_64-unknown-none",
     "aarch64-unknown-none-softfloat",
 ]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 memoffset = { version = "0.6", features = ["unstable_const"], optional = true }

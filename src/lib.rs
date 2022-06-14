@@ -3,6 +3,7 @@
 #![no_std]
 #![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
 #![cfg_attr(feature = "kernel", feature(core_intrinsics))]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![warn(unsafe_op_in_unsafe_fn)]
 
 #[cfg(feature = "loader")]
