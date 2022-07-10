@@ -1,5 +1,31 @@
 use core::fmt;
 
+#[used]
+#[link_section = ".note.hermit.entry-version"]
+static ENTRY_VERSION: Note = Note {
+    header: Nhdr32 {
+        n_namesz: 7,
+        n_descsz: 1,
+        n_type: crate::NT_HERMIT_ENTRY_VERSION,
+    },
+    name: *b"HERMIT\0\0",
+    data: [1],
+};
+
+#[repr(C)]
+struct Note {
+    header: Nhdr32,
+    name: [u8; 8],
+    data: [u8; 1],
+}
+
+#[repr(C)]
+struct Nhdr32 {
+    n_namesz: u32,
+    n_descsz: u32,
+    n_type: u32,
+}
+
 use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
 
 impl BootInfo {
