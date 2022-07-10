@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  clippy:
+    name: Clippy
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: nightly-2022-06-29
+          target: ${{ matrix.arch }}-unknown-linux-gnu
+          components: clippy
+      - name: Clippy
+        run: cargo clippy --all-features --target ${{ matrix.arch }}-unknown-linux-gnu
+        env:
+          RUSTFLAGS: -Dwarnings
+
+  doc:
+    name: Check documentation
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: nightly
+          target: ${{ matrix.arch }}-unknown-linux-gnu
+      - name: Check documentation
+        run: cargo doc --all-features --target ${{ matrix.arch }}-unknown-linux-gnu
+        env:
+          RUSTDOCFLAGS: -Dwarnings
+
+  fmt:
+    name: Check format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check format
+        run: cargo fmt -- --check
