@@ -1,5 +1,9 @@
 # hermit-entry
 
+[![Crates.io](https://img.shields.io/crates/v/hermit-entry)](https://crates.io/crates/hermit-entry)
+[![docs.rs](https://img.shields.io/badge/docs.rs-documentation-green.svg)](https://docs.rs/hermit-entry/latest/hermit_entry/)
+[![CI](https://github.com/hermitcore/hermit-entry/actions/workflows/ci.yml/badge.svg)](https://github.com/hermitcore/hermit-entry/actions/workflows/ci.yml)
+
 RustyHermit's entry API.
 
 ## License
