@@ -23,6 +23,13 @@ type SerialPortBase = u16;
 #[cfg(target_arch = "aarch64")]
 type SerialPortBase = u32;
 
+/// Note type for specifying the hermit entry version.
+///
+/// The note name for this is `HERMIT`.
+///
+/// The `desc` field will be 1 word, which specifies the hermit entry version.
+pub const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
+
 #[derive(Debug)]
 pub struct BootInfo {
     pub base: u64,
