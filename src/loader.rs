@@ -1,7 +1,5 @@
 use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
 
-pub type Entry = extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
-
 impl Default for BootInfo {
     fn default() -> Self {
         Self {
