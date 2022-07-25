@@ -6,10 +6,10 @@ static ENTRY_VERSION: Note = Note {
     header: Nhdr32 {
         n_namesz: 7,
         n_descsz: 1,
-        n_type: crate::NT_HERMIT_ENTRY_VERSION,
+        n_type: crate::consts::NT_HERMIT_ENTRY_VERSION,
     },
     name: *b"HERMIT\0\0",
-    data: [1],
+    data: [crate::consts::HERMIT_ENTRY_VERSION],
 };
 
 #[repr(C)]

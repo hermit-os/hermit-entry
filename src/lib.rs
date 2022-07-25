@@ -17,12 +17,22 @@ pub use kernel::ParseHeaderError;
 
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
-/// Note type for specifying the hermit entry version.
-///
-/// The note name for this is `HERMIT`.
-///
-/// The `desc` field will be 1 word, which specifies the hermit entry version.
-pub const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
+mod consts {
+    /// Note type for specifying the hermit entry version.
+    ///
+    /// The note name for this is `HERMIT`.
+    ///
+    /// The `desc` field will be 1 word, which specifies the hermit entry version.
+    pub const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
+
+    pub const HERMIT_ENTRY_VERSION: u8 = 1;
+}
+
+#[cfg(feature = "loader")]
+pub use consts::NT_HERMIT_ENTRY_VERSION;
+
+#[cfg(feature = "loader")]
+pub use consts::HERMIT_ENTRY_VERSION;
 
 #[cfg(target_arch = "x86_64")]
 type SerialPortBase = u16;
