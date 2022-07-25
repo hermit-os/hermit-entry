@@ -72,56 +72,6 @@ impl RawBootInfo {
         memoffset::offset_of!(Self, current_stack_address)
     }
 
-    /// Returns `None` if the boot info's magic number and version match, or else returns a shared
-    /// reference to the boot info wrapped in `Some`.
-    ///
-    /// # Safety
-    ///
-    /// When calling this method, you have to ensure that all of the following is true:
-    ///
-    /// * The pointer must be properly aligned.
-    ///
-    /// * The magic number and the version's fields must be "dereferenceable" in the sense defined
-    ///   in [`core::ptr#safety`].
-    ///
-    /// * If the magic number and the version match, the pointer must be "dereferenceable" as a whole.
-    ///
-    /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
-    ///   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
-    ///   In particular, for the duration of this lifetime, the memory the pointer points to must
-    ///   not get mutated (except inside `UnsafeCell`).
-    ///
-    /// This applies even if the result of this method is unused!
-    pub unsafe fn try_from_ptr<'a>(this: *const Self) -> Result<&'a Self, ParseHeaderError> {
-        #[derive(Clone, Copy)]
-        #[repr(C)]
-        struct RawBootInfoHeader {
-            magic_number: u32,
-            version: u32,
-        }
-
-        let RawBootInfoHeader {
-            magic_number,
-            version,
-        } = unsafe {
-            // SAFETY: The caller must guarantee that `this` meets all the requirements to be
-            // dereferenced as `RawBootInfoHeader`.
-            *this.cast()
-        };
-
-        if magic_number != Self::MAGIC_NUMBER {
-            return Err(ParseHeaderError::InvalidMagicNumber { magic_number });
-        }
-
-        if version != Self::VERSION {
-            return Err(ParseHeaderError::InvalidVersion { version });
-        }
-
-        // SAFETY: The caller must guarantee that `this` meets all the requirements to be
-        // dereferenced, since magic number and version match.
-        unsafe { Ok(&*this) }
-    }
-
     pub fn increment_cpu_online(&self) {
         unsafe {
             let _ = core::intrinsics::atomic_xadd(core::ptr::addr_of!(self.cpu_online) as _, 1);
