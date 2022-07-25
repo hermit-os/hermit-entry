@@ -15,7 +15,7 @@ mod kernel;
 #[cfg(feature = "kernel")]
 pub use kernel::ParseHeaderError;
 
-pub type Entry = extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
+pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
 #[cfg(target_arch = "x86_64")]
 type SerialPortBase = u16;
