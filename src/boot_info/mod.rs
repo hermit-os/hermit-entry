@@ -13,7 +13,7 @@ mod kernel;
 use core::{
     num::{NonZeroU32, NonZeroU64},
     ops::Range,
-    sync::atomic::{AtomicU32, AtomicU64, Ordering},
+    sync::atomic::{AtomicU64, Ordering},
 };
 
 use time::OffsetDateTime;
@@ -166,7 +166,10 @@ pub struct RawBootInfo {
     /// libhermit-rs defaults to 0.
     boot_processor: u32,
 
-    cpu_online: AtomicU32,
+    /// Number of initialized CPUs (legacy)
+    ///
+    /// Used to synchronize vCPU startup with uhyve.
+    cpu_online: u32,
 
     possible_cpus: u32,
 
@@ -213,11 +216,5 @@ impl RawBootInfo {
     pub fn store_current_stack_address(&self, current_stack_address: u64) {
         self.current_stack_address
             .store(current_stack_address, Ordering::Relaxed);
-    }
-
-    /// Returns the number of initialized CPUs.
-    // Used by uhyve to synchronize vCPU startup.
-    pub fn load_cpu_online(&self) -> u32 {
-        self.cpu_online.load(Ordering::Acquire)
     }
 }

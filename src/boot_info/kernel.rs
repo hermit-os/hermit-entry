@@ -106,10 +106,4 @@ impl RawBootInfo {
     pub fn load_current_stack_address(&self) -> u64 {
         self.current_stack_address.load(Ordering::Relaxed)
     }
-
-    /// Increments the number of initialized CPUs.
-    // Used to synchronize vCPU startup with uhyve.
-    pub fn increment_cpu_online(&self) {
-        self.cpu_online.fetch_add(1, Ordering::Release);
-    }
 }

@@ -102,7 +102,7 @@ impl From<BootInfo> for RawBootInfo {
             cmdsize,
             cpu_freq,
             boot_processor: !0,
-            cpu_online: 0.into(),
+            cpu_online: Default::default(),
             possible_cpus,
             current_boot_id: Default::default(),
             uartport,

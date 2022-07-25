@@ -24,7 +24,8 @@ pub use note::_Note;
 /// Kernel entry point.
 ///
 /// This is the signature of the entry point of the kernel.
-pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static boot_info::RawBootInfo) -> !;
+pub type Entry =
+    unsafe extern "C" fn(raw_boot_info: &'static boot_info::RawBootInfo, cpu_id: u32) -> !;
 
 /// Note type for specifying the hermit entry version.
 ///
