@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
+
 #[used]
 #[link_section = ".note.hermit.entry-version"]
 static ENTRY_VERSION: Note = Note {
@@ -25,8 +27,6 @@ struct Nhdr32 {
     n_descsz: u32,
     n_type: u32,
 }
-
-use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
 
 impl BootInfo {
     pub fn copy_from(raw_boot_info: &'_ RawBootInfo) -> Self {
