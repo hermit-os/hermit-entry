@@ -15,6 +15,9 @@ mod kernel;
 #[cfg(feature = "kernel")]
 pub use kernel::ParseHeaderError;
 
+#[cfg(feature = "kernel")]
+pub use kernel::_Note;
+
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
 mod consts {
