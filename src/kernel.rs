@@ -116,14 +116,6 @@ impl RawBootInfo {
         }
     }
 
-    pub fn load_boot_time(&self) -> u64 {
-        unsafe { core::ptr::addr_of!(self.boot_gtod).read_volatile() }
-    }
-
-    pub fn store_boot_time(&self, boot_time: u64) {
-        unsafe { (core::ptr::addr_of!(self.boot_gtod) as *mut u64).write_volatile(boot_time) }
-    }
-
     pub fn load_current_percore_address(&self) -> u64 {
         unsafe { core::ptr::addr_of!(self.current_percore_address).read_volatile() }
     }
