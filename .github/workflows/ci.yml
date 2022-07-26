@@ -16,9 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2022-06-29
           target: ${{ matrix.arch }}-unknown-linux-gnu
           components: clippy
       - name: Clippy
@@ -36,9 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
           target: ${{ matrix.arch }}-unknown-linux-gnu
       - name: Check documentation
         run: cargo doc --all-features --target ${{ matrix.arch }}-unknown-linux-gnu

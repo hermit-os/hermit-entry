@@ -1,3 +1,5 @@
+use core::sync::atomic::{AtomicU32, AtomicU64};
+
 use crate::{NetInfo, RawBootInfo, SerialPortBase, TlsInfo};
 
 #[derive(Debug)]
@@ -80,38 +82,40 @@ impl RawBootInfo {
 
     const VERSION: u32 = 1;
 
-    pub const INVALID: Self = Self {
-        magic_number: 0,
-        version: 0,
-        base: 0,
-        #[cfg(target_arch = "aarch64")]
-        ram_start: 0,
-        limit: 0,
-        image_size: 0,
-        tls_start: 0,
-        tls_filesz: 0,
-        tls_memsz: 0,
-        tls_align: 0,
-        current_stack_address: 0,
-        current_percore_address: 0,
-        host_logical_addr: 0,
-        boot_gtod: 0,
-        #[cfg(target_arch = "x86_64")]
-        mb_info: 0,
-        cmdline: 0,
-        cmdsize: 0,
-        cpu_freq: 0,
-        boot_processor: 0,
-        cpu_online: 0,
-        possible_cpus: 0,
-        current_boot_id: 0,
-        uartport: 0,
-        single_kernel: 0,
-        uhyve: 0,
-        hcip: [0; 4],
-        hcgateway: [0; 4],
-        hcmask: [0; 4],
-    };
+    pub const fn invalid() -> Self {
+        Self {
+            magic_number: 0,
+            version: 0,
+            base: 0,
+            #[cfg(target_arch = "aarch64")]
+            ram_start: 0,
+            limit: 0,
+            image_size: 0,
+            tls_start: 0,
+            tls_filesz: 0,
+            tls_memsz: 0,
+            tls_align: 0,
+            current_stack_address: AtomicU64::new(0),
+            current_percore_address: 0,
+            host_logical_addr: 0,
+            boot_gtod: 0,
+            #[cfg(target_arch = "x86_64")]
+            mb_info: 0,
+            cmdline: 0,
+            cmdsize: 0,
+            cpu_freq: 0,
+            boot_processor: 0,
+            cpu_online: AtomicU32::new(0),
+            possible_cpus: 0,
+            current_boot_id: 0,
+            uartport: 0,
+            single_kernel: 0,
+            uhyve: 0,
+            hcip: [0; 4],
+            hcgateway: [0; 4],
+            hcmask: [0; 4],
+        }
+    }
 }
 
 impl From<BootInfoBuilder> for RawBootInfo {
@@ -128,7 +132,7 @@ impl From<BootInfoBuilder> for RawBootInfo {
             tls_filesz: boot_info.tls_info.filesz,
             tls_memsz: boot_info.tls_info.memsz,
             tls_align: boot_info.tls_info.align,
-            current_stack_address: boot_info.current_stack_address,
+            current_stack_address: boot_info.current_stack_address.into(),
             current_percore_address: 0,
             host_logical_addr: boot_info.host_logical_addr,
             boot_gtod: boot_info.boot_gtod,
@@ -138,7 +142,7 @@ impl From<BootInfoBuilder> for RawBootInfo {
             cmdsize: boot_info.cmdsize,
             cpu_freq: boot_info.cpu_freq,
             boot_processor: boot_info.boot_processor,
-            cpu_online: 0,
+            cpu_online: 0.into(),
             possible_cpus: boot_info.possible_cpus,
             current_boot_id: boot_info.current_boot_id,
             uartport: boot_info.uartport,

@@ -2,9 +2,9 @@
 
 #![no_std]
 #![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
-#![cfg_attr(feature = "kernel", feature(core_intrinsics))]
+#![cfg_attr(feature = "kernel", feature(const_refs_to_cell))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
-#![warn(unsafe_op_in_unsafe_fn)]
+#![forbid(unsafe_code)]
 
 #[cfg(feature = "loader")]
 mod loader;
@@ -20,6 +20,9 @@ pub use kernel::BootInfo;
 
 #[cfg(feature = "kernel")]
 pub use kernel::_Note;
+
+use core::sync::atomic::Ordering;
+use core::sync::atomic::{AtomicU32, AtomicU64};
 
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
@@ -74,7 +77,7 @@ pub struct RawBootInfo {
     tls_memsz: u64,
     #[cfg(target_arch = "aarch64")]
     tls_align: u64,
-    current_stack_address: u64,
+    current_stack_address: AtomicU64,
     current_percore_address: u64,
     host_logical_addr: u64,
     boot_gtod: u64,
@@ -84,7 +87,7 @@ pub struct RawBootInfo {
     cmdsize: u64,
     cpu_freq: u32,
     boot_processor: u32,
-    cpu_online: u32,
+    cpu_online: AtomicU32,
     possible_cpus: u32,
     current_boot_id: u32,
     uartport: SerialPortBase,
@@ -99,6 +102,6 @@ pub struct RawBootInfo {
 
 impl RawBootInfo {
     pub fn load_cpu_online(&self) -> u32 {
-        unsafe { core::ptr::addr_of!(self.cpu_online).read_volatile() }
+        self.cpu_online.load(Ordering::Acquire)
     }
 }

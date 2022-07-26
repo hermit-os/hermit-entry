@@ -1,3 +1,5 @@
+use core::sync::atomic::Ordering;
+
 use crate::{NetInfo, RawBootInfo, SerialPortBase, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
@@ -105,19 +107,15 @@ impl RawBootInfo {
     }
 
     pub fn increment_cpu_online(&self) {
-        unsafe {
-            let _ = core::intrinsics::atomic_xadd(core::ptr::addr_of!(self.cpu_online) as _, 1);
-        }
+        self.cpu_online.fetch_add(1, Ordering::Release);
     }
 
     pub fn load_current_stack_address(&self) -> u64 {
-        unsafe { core::ptr::addr_of!(self.current_stack_address).read_volatile() }
+        self.current_stack_address.load(Ordering::Relaxed)
     }
 
     pub fn store_current_stack_address(&self, current_stack_address: u64) {
-        unsafe {
-            (core::ptr::addr_of!(self.current_stack_address) as *mut u64)
-                .write_volatile(current_stack_address)
-        }
+        self.current_stack_address
+            .store(current_stack_address, Ordering::Relaxed);
     }
 }
