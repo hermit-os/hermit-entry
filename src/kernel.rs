@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
+use crate::{NetInfo, RawBootInfo, SerialPortBase, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
 #[macro_export]
@@ -39,6 +39,33 @@ struct Nhdr32 {
     n_namesz: u32,
     n_descsz: u32,
     n_type: u32,
+}
+
+#[derive(Debug)]
+pub struct BootInfo {
+    pub base: u64,
+    pub limit: u64,
+    pub image_size: u64,
+    pub tls_info: TlsInfo,
+    pub current_stack_address: u64,
+    pub current_percore_address: u64,
+    pub host_logical_addr: u64,
+    pub boot_gtod: u64,
+    pub cmdline: u64,
+    pub cmdsize: u64,
+    pub cpu_freq: u32,
+    pub boot_processor: u32,
+    pub cpu_online: u32,
+    pub possible_cpus: u32,
+    pub current_boot_id: u32,
+    pub uartport: SerialPortBase,
+    pub single_kernel: u8,
+    pub uhyve: u8,
+    pub net_info: NetInfo,
+    #[cfg(target_arch = "x86_64")]
+    pub mb_info: u64,
+    #[cfg(target_arch = "aarch64")]
+    pub ram_start: u64,
 }
 
 impl BootInfo {
