@@ -46,7 +46,6 @@ pub struct BootInfo {
     pub image_size: u64,
     pub tls_info: TlsInfo,
     pub current_stack_address: u64,
-    pub current_percore_address: u64,
     pub host_logical_addr: u64,
     pub boot_gtod: u64,
     pub cmdline: u64,
@@ -79,7 +78,6 @@ impl BootInfo {
                 align: raw_boot_info.tls_align,
             },
             current_stack_address: raw_boot_info.current_stack_address,
-            current_percore_address: raw_boot_info.current_percore_address,
             host_logical_addr: raw_boot_info.host_logical_addr,
             boot_gtod: raw_boot_info.boot_gtod,
             cmdline: raw_boot_info.cmdline,
@@ -113,17 +111,6 @@ impl RawBootInfo {
     pub fn increment_cpu_online(&self) {
         unsafe {
             let _ = core::intrinsics::atomic_xadd(core::ptr::addr_of!(self.cpu_online) as _, 1);
-        }
-    }
-
-    pub fn load_current_percore_address(&self) -> u64 {
-        unsafe { core::ptr::addr_of!(self.current_percore_address).read_volatile() }
-    }
-
-    pub fn store_current_percore_address(&self, current_percore_address: u64) {
-        unsafe {
-            (core::ptr::addr_of!(self.current_percore_address) as *mut u64)
-                .write_volatile(current_percore_address)
         }
     }
 
