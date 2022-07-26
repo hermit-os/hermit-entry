@@ -1,5 +1,3 @@
-use core::fmt;
-
 use crate::{NetInfo, RawBootInfo, SerialPortBase, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
@@ -145,33 +143,6 @@ impl RawBootInfo {
         unsafe {
             (core::ptr::addr_of!(self.current_stack_address) as *mut u64)
                 .write_volatile(current_stack_address)
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum ParseHeaderError {
-    InvalidMagicNumber { magic_number: u32 },
-    InvalidVersion { version: u32 },
-}
-
-impl fmt::Display for ParseHeaderError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseHeaderError::InvalidMagicNumber { magic_number } => {
-                let expected = RawBootInfo::MAGIC_NUMBER;
-                write!(
-                    f,
-                    "invalid magic number (expected {expected:?}, found {magic_number:?})"
-                )
-            }
-            ParseHeaderError::InvalidVersion { version } => {
-                let expected = RawBootInfo::VERSION;
-                write!(
-                    f,
-                    "invalid version (expected {expected:?}, found {version:?})"
-                )
-            }
         }
     }
 }

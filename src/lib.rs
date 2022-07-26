@@ -16,9 +16,6 @@ pub use loader::BootInfoBuilder;
 mod kernel;
 
 #[cfg(feature = "kernel")]
-pub use kernel::ParseHeaderError;
-
-#[cfg(feature = "kernel")]
 pub use kernel::BootInfo;
 
 #[cfg(feature = "kernel")]
@@ -104,7 +101,4 @@ impl RawBootInfo {
     pub fn load_cpu_online(&self) -> u32 {
         unsafe { core::ptr::addr_of!(self.cpu_online).read_volatile() }
     }
-
-    const MAGIC_NUMBER: u32 = 0xC0DE_CAFEu32;
-    const VERSION: u32 = 1;
 }

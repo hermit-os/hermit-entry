@@ -80,6 +80,10 @@ impl Default for TlsInfo {
 }
 
 impl RawBootInfo {
+    const MAGIC_NUMBER: u32 = 0xC0DE_CAFEu32;
+
+    const VERSION: u32 = 1;
+
     pub const INVALID: Self = Self {
         magic_number: 0,
         version: 0,
