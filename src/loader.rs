@@ -1,40 +1,14 @@
 use core::sync::atomic::{AtomicU32, AtomicU64};
 
-use crate::{NetInfo, RawBootInfo, SerialPortBase, TlsInfo};
+use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
 
-#[derive(Debug)]
-pub struct BootInfoBuilder {
-    pub base: u64,
-    pub limit: u64,
-    pub image_size: u64,
-    pub tls_info: TlsInfo,
-    pub current_stack_address: u64,
-    pub host_logical_addr: u64,
-    pub boot_gtod: u64,
-    pub cmdline: u64,
-    pub cmdsize: u64,
-    pub cpu_freq: u32,
-    pub boot_processor: u32,
-    pub possible_cpus: u32,
-    pub current_boot_id: u32,
-    pub uartport: SerialPortBase,
-    pub single_kernel: u8,
-    pub uhyve: u8,
-    pub net_info: NetInfo,
-    #[cfg(target_arch = "x86_64")]
-    pub mb_info: u64,
-    #[cfg(target_arch = "aarch64")]
-    pub ram_start: u64,
-}
-
-impl Default for BootInfoBuilder {
+impl Default for BootInfo {
     fn default() -> Self {
         Self {
             base: Default::default(),
             limit: Default::default(),
             image_size: Default::default(),
             tls_info: Default::default(),
-            current_stack_address: Default::default(),
             host_logical_addr: Default::default(),
             boot_gtod: Default::default(),
             cmdline: Default::default(),
@@ -118,8 +92,8 @@ impl RawBootInfo {
     }
 }
 
-impl From<BootInfoBuilder> for RawBootInfo {
-    fn from(boot_info: BootInfoBuilder) -> Self {
+impl From<BootInfo> for RawBootInfo {
+    fn from(boot_info: BootInfo) -> Self {
         Self {
             magic_number: Self::MAGIC_NUMBER,
             version: Self::VERSION,
@@ -132,7 +106,7 @@ impl From<BootInfoBuilder> for RawBootInfo {
             tls_filesz: boot_info.tls_info.filesz,
             tls_memsz: boot_info.tls_info.memsz,
             tls_align: boot_info.tls_info.align,
-            current_stack_address: boot_info.current_stack_address.into(),
+            current_stack_address: Default::default(),
             current_percore_address: 0,
             host_logical_addr: boot_info.host_logical_addr,
             boot_gtod: boot_info.boot_gtod,
