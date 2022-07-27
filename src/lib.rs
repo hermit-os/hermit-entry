@@ -15,8 +15,7 @@ mod kernel;
 #[cfg(feature = "kernel")]
 pub use kernel::_Note;
 
-use core::sync::atomic::Ordering;
-use core::sync::atomic::{AtomicU32, AtomicU64};
+use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
