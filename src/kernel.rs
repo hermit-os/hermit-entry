@@ -1,6 +1,6 @@
 use core::sync::atomic::Ordering;
 
-use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
+use crate::{BootInfo, RawBootInfo, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
 #[macro_export]
@@ -53,22 +53,13 @@ impl BootInfo {
                 memsz: raw_boot_info.tls_memsz,
                 align: raw_boot_info.tls_align,
             },
-            host_logical_addr: raw_boot_info.host_logical_addr,
             boot_gtod: raw_boot_info.boot_gtod,
             cmdline: raw_boot_info.cmdline,
             cmdsize: raw_boot_info.cmdsize,
-            cpu_freq: raw_boot_info.cpu_freq,
-            boot_processor: raw_boot_info.boot_processor,
+            cpu_freq: raw_boot_info.cpu_freq.try_into().unwrap(),
             possible_cpus: raw_boot_info.possible_cpus,
-            current_boot_id: raw_boot_info.current_boot_id,
             uartport: raw_boot_info.uartport,
-            single_kernel: raw_boot_info.single_kernel,
             uhyve: raw_boot_info.uhyve,
-            net_info: NetInfo {
-                ip: raw_boot_info.hcip,
-                gateway: raw_boot_info.hcgateway,
-                mask: raw_boot_info.hcmask,
-            },
             #[cfg(target_arch = "x86_64")]
             mb_info: raw_boot_info.mb_info,
             #[cfg(target_arch = "aarch64")]

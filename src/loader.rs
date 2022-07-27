@@ -1,7 +1,8 @@
 use core::sync::atomic::{AtomicU32, AtomicU64};
 
-use crate::{BootInfo, NetInfo, RawBootInfo, TlsInfo};
+use crate::{BootInfo, RawBootInfo, TlsInfo};
 
+#[allow(clippy::derivable_impls)] // This is feature-gated
 impl Default for BootInfo {
     fn default() -> Self {
         Self {
@@ -9,32 +10,17 @@ impl Default for BootInfo {
             limit: Default::default(),
             image_size: Default::default(),
             tls_info: Default::default(),
-            host_logical_addr: Default::default(),
             boot_gtod: Default::default(),
             cmdline: Default::default(),
             cmdsize: Default::default(),
             cpu_freq: Default::default(),
-            boot_processor: !0,
             possible_cpus: Default::default(),
-            current_boot_id: Default::default(),
             uartport: Default::default(),
-            single_kernel: 1,
             uhyve: Default::default(),
-            net_info: Default::default(),
             #[cfg(target_arch = "x86_64")]
             mb_info: Default::default(),
             #[cfg(target_arch = "aarch64")]
             ram_start: Default::default(),
-        }
-    }
-}
-
-impl Default for NetInfo {
-    fn default() -> Self {
-        Self {
-            ip: [255, 255, 255, 255],
-            gateway: [255, 255, 255, 255],
-            mask: [255, 255, 255, 0],
         }
     }
 }
@@ -108,23 +94,23 @@ impl From<BootInfo> for RawBootInfo {
             tls_align: boot_info.tls_info.align,
             current_stack_address: Default::default(),
             current_percore_address: 0,
-            host_logical_addr: boot_info.host_logical_addr,
+            host_logical_addr: Default::default(),
             boot_gtod: boot_info.boot_gtod,
             #[cfg(target_arch = "x86_64")]
             mb_info: boot_info.mb_info,
             cmdline: boot_info.cmdline,
             cmdsize: boot_info.cmdsize,
-            cpu_freq: boot_info.cpu_freq,
-            boot_processor: boot_info.boot_processor,
+            cpu_freq: boot_info.cpu_freq.into(),
+            boot_processor: !0,
             cpu_online: 0.into(),
             possible_cpus: boot_info.possible_cpus,
-            current_boot_id: boot_info.current_boot_id,
+            current_boot_id: Default::default(),
             uartport: boot_info.uartport,
-            single_kernel: boot_info.single_kernel,
+            single_kernel: 1,
             uhyve: boot_info.uhyve,
-            hcip: boot_info.net_info.ip,
-            hcgateway: boot_info.net_info.gateway,
-            hcmask: boot_info.net_info.mask,
+            hcip: Default::default(),
+            hcgateway: Default::default(),
+            hcmask: Default::default(),
         }
     }
 }
