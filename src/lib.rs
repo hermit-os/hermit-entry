@@ -93,6 +93,7 @@ pub struct TlsInfo {
     pub align: u64,
 }
 
+#[derive(Debug)]
 #[repr(C)]
 pub struct RawBootInfo {
     /// Magic number (legacy)
