@@ -1,6 +1,6 @@
 use core::sync::atomic::Ordering;
 
-use crate::{BootInfo, RawBootInfo, TlsInfo};
+use crate::{BootInfo, PlatformInfo, RawBootInfo, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
 #[macro_export]
@@ -43,27 +43,74 @@ struct Nhdr32 {
 
 impl BootInfo {
     pub fn copy_from(raw_boot_info: &'_ RawBootInfo) -> Self {
-        Self {
-            base: raw_boot_info.base,
-            limit: raw_boot_info.limit,
-            image_size: raw_boot_info.image_size,
-            tls_info: TlsInfo {
-                start: raw_boot_info.tls_start,
-                filesz: raw_boot_info.tls_filesz,
-                memsz: raw_boot_info.tls_memsz,
-                align: raw_boot_info.tls_align,
-            },
-            boot_gtod: raw_boot_info.boot_gtod,
-            cmdline: raw_boot_info.cmdline,
-            cmdsize: raw_boot_info.cmdsize,
-            cpu_freq: raw_boot_info.cpu_freq.try_into().unwrap(),
-            possible_cpus: raw_boot_info.possible_cpus,
-            uartport: raw_boot_info.uartport,
-            uhyve: raw_boot_info.uhyve,
+        #[cfg(target_arch = "x86_64")]
+        let phys_start = 0;
+        #[cfg(target_arch = "aarch64")]
+        let phys_start = raw_boot_info.ram_start;
+        let phys_addr_range = phys_start..raw_boot_info.limit;
+
+        let kernel_start = raw_boot_info.base;
+        let kernel_image_addr_range = kernel_start..kernel_start + raw_boot_info.image_size;
+
+        let uhyve = (raw_boot_info.uhyve & 0b1) == 0b1;
+        let platform_info = if uhyve {
+            let pci = (raw_boot_info.uhyve & 0b10) == 0b10;
+
+            PlatformInfo::Uhyve {
+                pci,
+                cpu_count: raw_boot_info.possible_cpus,
+                cpu_freq: raw_boot_info.cpu_freq.try_into().unwrap(),
+                boot_time: raw_boot_info.boot_gtod,
+            }
+        } else {
             #[cfg(target_arch = "x86_64")]
-            mb_info: raw_boot_info.mb_info,
+            {
+                use core::{slice, str};
+
+                let cmdline = raw_boot_info.cmdline as *const u8;
+                let command_line = (!cmdline.is_null()).then(|| {
+                    // SAFETY: cmdline and cmdsize are valid forever.
+                    let slice =
+                        unsafe { slice::from_raw_parts(cmdline, raw_boot_info.cmdsize as usize) };
+                    str::from_utf8(slice).unwrap()
+                });
+
+                PlatformInfo::Multiboot {
+                    command_line,
+                    multiboot_info_ptr: raw_boot_info.mb_info,
+                }
+            }
+
             #[cfg(target_arch = "aarch64")]
-            ram_start: raw_boot_info.ram_start,
+            {
+                PlatformInfo::LinuxBoot
+            }
+        };
+
+        let tls_info = {
+            let (start, filesz, memsz, align) = (
+                raw_boot_info.tls_start,
+                raw_boot_info.tls_filesz,
+                raw_boot_info.tls_memsz,
+                raw_boot_info.tls_align,
+            );
+
+            (start != 0 || filesz != 0 || memsz != 0 || align != 0).then_some(TlsInfo {
+                start,
+                filesz,
+                memsz,
+                align,
+            })
+        };
+
+        let uartport = (raw_boot_info.uartport != 0).then_some(raw_boot_info.uartport);
+
+        Self {
+            phys_addr_range,
+            kernel_image_addr_range,
+            tls_info,
+            uartport,
+            platform_info,
         }
     }
 }

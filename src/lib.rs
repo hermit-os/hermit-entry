@@ -4,7 +4,6 @@
 #![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
 #![cfg_attr(feature = "kernel", feature(const_refs_to_cell))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
-#![forbid(unsafe_code)]
 
 #[cfg(feature = "loader")]
 mod loader;
@@ -15,7 +14,10 @@ mod kernel;
 #[cfg(feature = "kernel")]
 pub use kernel::_Note;
 
-use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use core::{
+    ops::Range,
+    sync::atomic::{AtomicU32, AtomicU64, Ordering},
+};
 
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
@@ -43,46 +45,46 @@ type SerialPortBase = u32;
 
 #[derive(Debug)]
 pub struct BootInfo {
-    /// Lowest physical memory address.
-    #[cfg(target_arch = "aarch64")]
-    pub ram_start: u64,
+    /// The range of all possible physical memory addresses.
+    pub phys_addr_range: Range<u64>,
 
-    /// Highest physical memory address.
-    pub limit: u64,
-
-    /// Start address of the loaded kernel image.
-    pub base: u64,
-
-    /// Size of the loaded kernel image in bytes.
-    pub image_size: u64,
+    /// The virtual address range of the loaded kernel image.
+    pub kernel_image_addr_range: Range<u64>,
 
     /// Kernel image TLS information.
-    pub tls_info: TlsInfo,
+    pub tls_info: Option<TlsInfo>,
 
     /// Serial port base address.
-    pub uartport: SerialPortBase,
+    pub uartport: Option<SerialPortBase>,
 
-    /// Discriminant determines if running on uhyve.
-    pub uhyve: u8,
+    pub platform_info: PlatformInfo,
+}
 
-    /// UHYVE ONLY: Boot time as Unix timestamp in microseconds.
-    pub boot_gtod: u64,
-
-    /// UHYVE ONLY: CPU frequency in MHz.
-    pub cpu_freq: u16,
-
-    /// UHYVE ONLY: Total number of CPUs available.
-    pub possible_cpus: u32,
-
-    /// MULTIBOOT ONLY: Command line pointer.
-    pub cmdline: u64,
-
-    /// MULTIBOOT ONLY: Command line length.
-    pub cmdsize: u64,
-
-    /// MULTIBOOT ONLY: Multiboot boot information address.
+#[derive(Debug)]
+pub enum PlatformInfo {
     #[cfg(target_arch = "x86_64")]
-    pub mb_info: u64,
+    Multiboot {
+        /// Command line passed to the kernel.
+        command_line: Option<&'static str>,
+
+        /// Multiboot boot information address.
+        multiboot_info_ptr: u64,
+    },
+    #[cfg(target_arch = "aarch64")]
+    LinuxBoot,
+    Uhyve {
+        /// PCI support.
+        pci: bool,
+
+        /// Total number of CPUs available.
+        cpu_count: u32,
+
+        /// CPU frequency in MHz.
+        cpu_freq: u16,
+
+        /// Boot time as Unix timestamp in microseconds.
+        boot_time: u64,
+    },
 }
 
 #[derive(Debug)]
