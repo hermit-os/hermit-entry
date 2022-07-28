@@ -189,6 +189,11 @@ pub struct RawBootInfo {
 }
 
 impl RawBootInfo {
+    pub fn store_current_stack_address(&self, current_stack_address: u64) {
+        self.current_stack_address
+            .store(current_stack_address, Ordering::Relaxed);
+    }
+
     pub fn load_cpu_online(&self) -> u32 {
         self.cpu_online.load(Ordering::Acquire)
     }

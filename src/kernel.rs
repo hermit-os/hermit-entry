@@ -80,9 +80,4 @@ impl RawBootInfo {
     pub fn load_current_stack_address(&self) -> u64 {
         self.current_stack_address.load(Ordering::Relaxed)
     }
-
-    pub fn store_current_stack_address(&self, current_stack_address: u64) {
-        self.current_stack_address
-            .store(current_stack_address, Ordering::Relaxed);
-    }
 }
