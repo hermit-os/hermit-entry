@@ -44,6 +44,7 @@ struct Nhdr32 {
 }
 
 impl BootInfo {
+    /// Copies boot information from [`RawBootInfo`].
     pub fn copy_from(raw_boot_info: &'_ RawBootInfo) -> Self {
         #[cfg(target_arch = "x86_64")]
         let phys_start = 0;
@@ -127,14 +128,20 @@ impl BootInfo {
 }
 
 impl RawBootInfo {
+    /// `current_stack_address` offset.
+    ///
+    /// Returns the offset of the field `current_stack_address` from the beginning of the `RawBootInfo` struct.
     pub const fn current_stack_address_offset() -> usize {
         memoffset::offset_of!(Self, current_stack_address)
     }
 
+    /// Returns the current stack address.
     pub fn load_current_stack_address(&self) -> u64 {
         self.current_stack_address.load(Ordering::Relaxed)
     }
 
+    /// Increments the number of initialized CPUs.
+    // Used to synchronize vCPU startup with uhyve.
     pub fn increment_cpu_online(&self) {
         self.cpu_online.fetch_add(1, Ordering::Release);
     }

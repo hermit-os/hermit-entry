@@ -4,6 +4,7 @@
 #![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
 #![cfg_attr(feature = "kernel", feature(const_refs_to_cell))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+#![warn(missing_docs)]
 
 #[cfg(feature = "loader")]
 mod loader;
@@ -22,6 +23,9 @@ use core::{
 
 use time::OffsetDateTime;
 
+/// Kernel entry point.
+///
+/// This is the signature of the entry point of the kernel.
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
 mod consts {
@@ -32,6 +36,7 @@ mod consts {
     /// The `desc` field will be 1 word, which specifies the hermit entry version.
     pub const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
 
+    /// The current hermit entry version.
     pub const HERMIT_ENTRY_VERSION: u8 = 1;
 }
 
@@ -41,11 +46,19 @@ pub use consts::NT_HERMIT_ENTRY_VERSION;
 #[cfg(feature = "loader")]
 pub use consts::HERMIT_ENTRY_VERSION;
 
+/// Serial I/O port.
 #[cfg(target_arch = "x86_64")]
 pub type SerialPortBase = core::num::NonZeroU16;
+
+/// Serial port base address
 #[cfg(target_arch = "aarch64")]
 pub type SerialPortBase = core::num::NonZeroU64;
 
+/// Boot information.
+///
+/// This struct is built by the loader and consumed by the kernel.
+/// It contains information on how the kernel image was loaded as well as
+/// additional hardware and loader specific information.
 #[derive(Debug)]
 pub struct BootInfo {
     /// The range of all possible physical memory addresses.
@@ -60,11 +73,16 @@ pub struct BootInfo {
     /// Serial port base address.
     pub serial_port_base: Option<SerialPortBase>,
 
+    /// Platform information.
     pub platform_info: PlatformInfo,
 }
 
+/// Platform information.
+///
+/// This struct holds platform and loader specific information.
 #[derive(Debug)]
 pub enum PlatformInfo {
+    /// Multiboot.
     #[cfg(target_arch = "x86_64")]
     Multiboot {
         /// Command line passed to the kernel.
@@ -73,8 +91,10 @@ pub enum PlatformInfo {
         /// Multiboot boot information address.
         multiboot_info_addr: core::num::NonZeroU64,
     },
+    /// Direct Linux Boot.
     #[cfg(target_arch = "aarch64")]
     LinuxBoot,
+    /// Uhyve.
     Uhyve {
         /// PCI support.
         has_pci: bool,
@@ -90,14 +110,25 @@ pub enum PlatformInfo {
     },
 }
 
+/// Thread local storage (TLS) image information.
 #[derive(Debug)]
 pub struct TlsInfo {
+    /// The start address of the TLS image.
     pub start: u64,
+
+    /// `filesz` of the TLS program header.
     pub filesz: u64,
+
+    /// `memsz` of the TLS program header.
     pub memsz: u64,
+
+    /// `align` of the TLS program header.
     pub align: u64,
 }
 
+/// The raw boot information struct.
+///
+/// This is kept separate from [`BootInfo`] to make non-breaking API evolution possible.
 #[derive(Debug)]
 #[repr(C)]
 pub struct RawBootInfo {
@@ -122,8 +153,6 @@ pub struct RawBootInfo {
     tls_memsz: u64,
     #[cfg(target_arch = "aarch64")]
     tls_align: u64,
-
-    /// The current stack address.
     current_stack_address: AtomicU64,
 
     /// The current percore address (legacy).
@@ -151,9 +180,6 @@ pub struct RawBootInfo {
     /// libhermit-rs defaults to 0.
     boot_processor: u32,
 
-    /// Number of initialized CPUs.
-    ///
-    /// Synchronizes vCPU startup with uhyve.
     cpu_online: AtomicU32,
 
     possible_cpus: u32,
@@ -197,11 +223,14 @@ pub struct RawBootInfo {
 }
 
 impl RawBootInfo {
+    /// Stores the current stack address.
     pub fn store_current_stack_address(&self, current_stack_address: u64) {
         self.current_stack_address
             .store(current_stack_address, Ordering::Relaxed);
     }
 
+    /// Returns the number of initialized CPUs.
+    // Used by uhyve to synchronize vCPU startup.
     pub fn load_cpu_online(&self) -> u32 {
         self.cpu_online.load(Ordering::Acquire)
     }
