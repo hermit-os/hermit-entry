@@ -1,46 +1,9 @@
-use core::sync::atomic::{AtomicU32, AtomicU64};
-
 use crate::{BootInfo, PlatformInfo, RawBootInfo};
 
 impl RawBootInfo {
     const MAGIC_NUMBER: u32 = 0xC0DE_CAFEu32;
 
     const VERSION: u32 = 1;
-
-    pub const fn invalid() -> Self {
-        Self {
-            magic_number: 0,
-            version: 0,
-            base: 0,
-            #[cfg(target_arch = "aarch64")]
-            ram_start: 0,
-            limit: 0,
-            image_size: 0,
-            tls_start: 0,
-            tls_filesz: 0,
-            tls_memsz: 0,
-            tls_align: 0,
-            current_stack_address: AtomicU64::new(0),
-            current_percore_address: 0,
-            host_logical_addr: 0,
-            boot_gtod: 0,
-            #[cfg(target_arch = "x86_64")]
-            mb_info: 0,
-            cmdline: 0,
-            cmdsize: 0,
-            cpu_freq: 0,
-            boot_processor: 0,
-            cpu_online: AtomicU32::new(0),
-            possible_cpus: 0,
-            current_boot_id: 0,
-            uartport: 0,
-            single_kernel: 0,
-            uhyve: 0,
-            hcip: [0; 4],
-            hcgateway: [0; 4],
-            hcmask: [0; 4],
-        }
-    }
 }
 
 impl From<BootInfo> for RawBootInfo {
