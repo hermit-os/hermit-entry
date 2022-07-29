@@ -15,9 +15,12 @@ mod kernel;
 pub use kernel::_Note;
 
 use core::{
+    num::NonZeroU64,
     ops::Range,
     sync::atomic::{AtomicU32, AtomicU64, Ordering},
 };
+
+use time::OffsetDateTime;
 
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
@@ -39,9 +42,9 @@ pub use consts::NT_HERMIT_ENTRY_VERSION;
 pub use consts::HERMIT_ENTRY_VERSION;
 
 #[cfg(target_arch = "x86_64")]
-type SerialPortBase = u16;
+pub type SerialPortBase = core::num::NonZeroU16;
 #[cfg(target_arch = "aarch64")]
-type SerialPortBase = u32;
+pub type SerialPortBase = core::num::NonZeroU64;
 
 #[derive(Debug)]
 pub struct BootInfo {
@@ -55,7 +58,7 @@ pub struct BootInfo {
     pub tls_info: Option<TlsInfo>,
 
     /// Serial port base address.
-    pub uartport: Option<SerialPortBase>,
+    pub serial_port_base: Option<SerialPortBase>,
 
     pub platform_info: PlatformInfo,
 }
@@ -68,22 +71,22 @@ pub enum PlatformInfo {
         command_line: Option<&'static str>,
 
         /// Multiboot boot information address.
-        multiboot_info_ptr: u64,
+        multiboot_info_addr: core::num::NonZeroU64,
     },
     #[cfg(target_arch = "aarch64")]
     LinuxBoot,
     Uhyve {
         /// PCI support.
-        pci: bool,
+        has_pci: bool,
 
         /// Total number of CPUs available.
-        cpu_count: u32,
+        num_cpus: NonZeroU64,
 
-        /// CPU frequency in MHz.
-        cpu_freq: u16,
+        /// CPU frequency in kHz.
+        cpu_freq: u32,
 
-        /// Boot time as Unix timestamp in microseconds.
-        boot_time: u64,
+        /// Boot time.
+        boot_time: OffsetDateTime,
     },
 }
 
@@ -161,7 +164,10 @@ pub struct RawBootInfo {
     /// libhermit-rs deduces this from `cpu_online`.
     current_boot_id: u32,
 
-    uartport: SerialPortBase,
+    #[cfg(target_arch = "x86_64")]
+    uartport: u16,
+    #[cfg(target_arch = "aarch64")]
+    uartport: u32,
 
     /// Single Kernel (legacy)
     ///

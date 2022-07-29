@@ -1,6 +1,8 @@
 use core::sync::atomic::Ordering;
 
-use crate::{BootInfo, PlatformInfo, RawBootInfo, TlsInfo};
+use time::OffsetDateTime;
+
+use crate::{BootInfo, PlatformInfo, RawBootInfo, SerialPortBase, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
 #[macro_export]
@@ -54,13 +56,16 @@ impl BootInfo {
 
         let uhyve = (raw_boot_info.uhyve & 0b1) == 0b1;
         let platform_info = if uhyve {
-            let pci = (raw_boot_info.uhyve & 0b10) == 0b10;
+            let has_pci = (raw_boot_info.uhyve & 0b10) == 0b10;
+            let boot_time =
+                OffsetDateTime::from_unix_timestamp_nanos(raw_boot_info.boot_gtod as i128 * 1000)
+                    .unwrap();
 
             PlatformInfo::Uhyve {
-                pci,
-                cpu_count: raw_boot_info.possible_cpus,
-                cpu_freq: raw_boot_info.cpu_freq.try_into().unwrap(),
-                boot_time: raw_boot_info.boot_gtod,
+                has_pci,
+                num_cpus: u64::from(raw_boot_info.possible_cpus).try_into().unwrap(),
+                cpu_freq: raw_boot_info.cpu_freq * 1000,
+                boot_time,
             }
         } else {
             #[cfg(target_arch = "x86_64")]
@@ -77,7 +82,7 @@ impl BootInfo {
 
                 PlatformInfo::Multiboot {
                     command_line,
-                    multiboot_info_ptr: raw_boot_info.mb_info,
+                    multiboot_info_addr: raw_boot_info.mb_info.try_into().unwrap(),
                 }
             }
 
@@ -103,13 +108,19 @@ impl BootInfo {
             })
         };
 
-        let uartport = (raw_boot_info.uartport != 0).then_some(raw_boot_info.uartport);
+        #[cfg(target_arch = "x86_64")]
+        let uartport = raw_boot_info.uartport;
+        #[cfg(target_arch = "aarch64")]
+        let uartport = raw_boot_info.uartport.into();
+
+        let serial_port_base =
+            (raw_boot_info.uartport != 0).then_some(SerialPortBase::new(uartport).unwrap());
 
         Self {
             phys_addr_range,
             kernel_image_addr_range,
             tls_info,
-            uartport,
+            serial_port_base,
             platform_info,
         }
     }

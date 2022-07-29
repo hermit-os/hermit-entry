@@ -57,9 +57,9 @@ impl From<BootInfo> for RawBootInfo {
             #[cfg(target_arch = "x86_64")]
             PlatformInfo::Multiboot {
                 command_line,
-                multiboot_info_ptr,
+                multiboot_info_addr,
             } => {
-                mb_info = multiboot_info_ptr;
+                mb_info = multiboot_info_addr.get();
                 let (cmdline, cmdsize) = command_line
                     .map(|command_line| (command_line.as_ptr() as u64, command_line.len() as u64))
                     .unwrap_or_default();
@@ -68,8 +68,8 @@ impl From<BootInfo> for RawBootInfo {
             #[cfg(target_arch = "aarch64")]
             PlatformInfo::LinuxBoot => Default::default(),
             PlatformInfo::Uhyve {
-                pci,
-                cpu_count,
+                has_pci,
+                num_cpus,
                 cpu_freq,
                 boot_time,
             } => {
@@ -77,8 +77,16 @@ impl From<BootInfo> for RawBootInfo {
                 {
                     mb_info = 0;
                 }
-                let uhyve = if pci { 0b11 } else { 0b1 };
-                (0, 0, boot_time, cpu_freq.into(), cpu_count, uhyve)
+                let uhyve = if has_pci { 0b11 } else { 0b1 };
+                let boot_time = u64::try_from(boot_time.unix_timestamp_nanos() / 1000).unwrap();
+                (
+                    0,
+                    0,
+                    boot_time,
+                    cpu_freq / 1000,
+                    u32::try_from(num_cpus.get()).unwrap(),
+                    uhyve,
+                )
             }
         };
 
@@ -96,6 +104,14 @@ impl From<BootInfo> for RawBootInfo {
                 )
             })
             .unwrap_or_default();
+
+        let uartport = boot_info
+            .serial_port_base
+            .map(|serial_port_base| serial_port_base.get())
+            .unwrap_or_default();
+
+        #[cfg(target_arch = "aarch64")]
+        let uartport = u32::try_from(uartport).unwrap();
 
         Self {
             magic_number: Self::MAGIC_NUMBER,
@@ -122,7 +138,7 @@ impl From<BootInfo> for RawBootInfo {
             cpu_online: 0.into(),
             possible_cpus,
             current_boot_id: Default::default(),
-            uartport: boot_info.uartport.unwrap_or_default(),
+            uartport,
             single_kernel: 1,
             uhyve,
             hcip: Default::default(),

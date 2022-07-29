@@ -20,6 +20,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 memoffset = { version = "0.6", features = ["unstable_const"], optional = true }
+time = { version = "0.3", default-features = false }
 
 [features]
 default = []
