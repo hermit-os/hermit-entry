@@ -131,11 +131,11 @@ impl RawBootInfo {
         memoffset::offset_of!(Self, current_stack_address)
     }
 
-    pub fn increment_cpu_online(&self) {
-        self.cpu_online.fetch_add(1, Ordering::Release);
-    }
-
     pub fn load_current_stack_address(&self) -> u64 {
         self.current_stack_address.load(Ordering::Relaxed)
+    }
+
+    pub fn increment_cpu_online(&self) {
+        self.cpu_online.fetch_add(1, Ordering::Release);
     }
 }
