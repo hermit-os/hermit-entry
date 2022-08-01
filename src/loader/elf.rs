@@ -1,6 +1,7 @@
 //! Parsing and loading kernel objects from ELF files.
 
 use core::{
+    fmt,
     mem::{self, MaybeUninit},
     str,
 };
@@ -95,9 +96,20 @@ fn iter_notes(bytes: &[u8], align: usize) -> NoteIterator<'_> {
     NoteIterator { bytes, align }
 }
 
+/// An error returned when parsing a kernel ELF fails.
+#[derive(Debug)]
+pub struct ParseKernelError(&'static str);
+
+impl fmt::Display for ParseKernelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let info = self.0;
+        write!(f, "invalid ELF: {info}")
+    }
+}
+
 impl<'a> KernelObject<'a> {
     /// Parses raw bytes of an ELF file into a loadable kernel object.
-    pub fn parse(elf: &[u8]) -> KernelObject<'_> {
+    pub fn parse(elf: &[u8]) -> Result<KernelObject<'_>, ParseKernelError> {
         {
             let range = elf.as_ptr_range();
             let len = elf.len();
@@ -115,13 +127,13 @@ impl<'a> KernelObject<'a> {
         // General compatibility checks
         {
             let class = header.e_ident[header::EI_CLASS];
-            assert_eq!(header::ELFCLASS64, class, "kernel ist not a 64-bit object");
+            if class != header::ELFCLASS64 {
+                return Err(ParseKernelError("kernel ist not a 64-bit object"));
+            }
             let data_encoding = header.e_ident[header::EI_DATA];
-            assert_eq!(
-                header::ELFDATA2LSB,
-                data_encoding,
-                "kernel object is not little endian"
-            );
+            if data_encoding != header::ELFDATA2LSB {
+                return Err(ParseKernelError("kernel object is not little endian"));
+            }
             let os_abi = header.e_ident[header::EI_OSABI];
             if os_abi != header::ELFOSABI_STANDALONE {
                 warn!("Kernel is not a hermit application");
@@ -136,11 +148,9 @@ impl<'a> KernelObject<'a> {
                 if let Some(note) = note_iter
                     .find(|note| note.name == "HERMIT" && note.ty == crate::NT_HERMIT_ENTRY_VERSION)
                 {
-                    assert_eq!(
-                        crate::HERMIT_ENTRY_VERSION,
-                        note.desc[0],
-                        "hermit entry version does not match"
-                    );
+                    if note.desc[0] != crate::HERMIT_ENTRY_VERSION {
+                        return Err(ParseKernelError("hermit entry version does not match"));
+                    }
                 } else {
                     warn!("Kernel does not specify hermit entry version. This will be an error in the future.");
                 }
@@ -148,15 +158,15 @@ impl<'a> KernelObject<'a> {
                 warn!("Kernel does not specify hermit entry version. This will be an error in the future.");
             }
 
-            assert!(
-                matches!(header.e_type, header::ET_DYN | header::ET_EXEC),
-                "kernel has unsupported ELF type"
-            );
+            if !matches!(header.e_type, header::ET_DYN | header::ET_EXEC) {
+                return Err(ParseKernelError("kernel has unsupported ELF type"));
+            }
 
-            assert_eq!(
-                ELF_ARCH, header.e_machine,
-                "kernel is not compiled for the correct architecture"
-            );
+            if header.e_machine != ELF_ARCH {
+                return Err(ParseKernelError(
+                    "kernel is not compiled for the correct architecture",
+                ));
+            }
         }
 
         let dyns = phs
@@ -169,10 +179,11 @@ impl<'a> KernelObject<'a> {
             })
             .unwrap_or_default();
 
-        assert!(
-            !dyns.iter().any(|d| d.d_tag == dynamic::DT_NEEDED),
-            "kernel was linked against dynamic libraries"
-        );
+        if dyns.iter().any(|d| d.d_tag == dynamic::DT_NEEDED) {
+            return Err(ParseKernelError(
+                "kernel was linked against dynamic libraries",
+            ));
+        }
 
         let dynamic_info = DynamicInfo::new(dyns, phs);
         assert_eq!(0, dynamic_info.relcount);
@@ -187,12 +198,12 @@ impl<'a> KernelObject<'a> {
             .iter()
             .all(|rela| reloc::r_type(rela.r_info) == R_RELATIVE));
 
-        KernelObject {
+        Ok(KernelObject {
             elf,
             header,
             phs,
             relas,
-        }
+        })
     }
 
     /// Required memory size for loading.

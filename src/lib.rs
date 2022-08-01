@@ -10,7 +10,7 @@
 mod loader;
 
 #[cfg(feature = "loader")]
-pub use loader::elf::{KernelObject, LoadedKernel};
+pub use loader::elf::{KernelObject, LoadedKernel, ParseKernelError};
 
 #[cfg(feature = "kernel")]
 mod kernel;
