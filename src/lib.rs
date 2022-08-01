@@ -31,23 +31,15 @@ use time::OffsetDateTime;
 /// This is the signature of the entry point of the kernel.
 pub type Entry = unsafe extern "C" fn(raw_boot_info: &'static RawBootInfo) -> !;
 
-mod consts {
-    /// Note type for specifying the hermit entry version.
-    ///
-    /// The note name for this is `HERMIT`.
-    ///
-    /// The `desc` field will be 1 word, which specifies the hermit entry version.
-    pub const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
+/// Note type for specifying the hermit entry version.
+///
+/// The note name for this is `HERMIT`.
+///
+/// The `desc` field will be 1 word, which specifies the hermit entry version.
+const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
 
-    /// The current hermit entry version.
-    pub const HERMIT_ENTRY_VERSION: u8 = 1;
-}
-
-#[cfg(feature = "loader")]
-pub use consts::NT_HERMIT_ENTRY_VERSION;
-
-#[cfg(feature = "loader")]
-pub use consts::HERMIT_ENTRY_VERSION;
+/// The current hermit entry version.
+const HERMIT_ENTRY_VERSION: u8 = 1;
 
 /// Serial I/O port.
 #[cfg(target_arch = "x86_64")]
