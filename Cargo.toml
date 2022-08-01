@@ -1,6 +1,6 @@
 [package]
 name = "hermit-entry"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Martin Kröning <mkroening@posteo.net>"]
 edition = "2021"
 description = "RustyHermit's entry API."
