@@ -2,7 +2,6 @@
 
 use core::{
     mem::{self, MaybeUninit},
-    ops::Range,
     str,
 };
 
@@ -18,7 +17,7 @@ use goblin::{
 use log::{info, warn};
 use plain::Plain;
 
-use crate::TlsInfo;
+use crate::{LoadInfo, TlsInfo};
 
 #[cfg(target_arch = "x86_64")]
 const ELF_ARCH: u16 = goblin::elf::header::EM_X86_64;
@@ -331,14 +330,4 @@ pub struct LoadedKernel {
 
     /// The kernel's entry point.
     pub entry_point: u64,
-}
-
-/// Load information required by the kernel.
-#[derive(Debug)]
-pub struct LoadInfo {
-    /// The virtual address range of the loaded kernel image.
-    pub kernel_image_addr_range: Range<u64>,
-
-    /// Kernel image TLS information.
-    pub tls_info: Option<TlsInfo>,
 }

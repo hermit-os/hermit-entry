@@ -2,7 +2,7 @@ use core::{num::NonZeroU32, sync::atomic::Ordering};
 
 use time::OffsetDateTime;
 
-use crate::{BootInfo, PlatformInfo, RawBootInfo, SerialPortBase, TlsInfo};
+use crate::{BootInfo, HardwareInfo, LoadInfo, PlatformInfo, RawBootInfo, SerialPortBase, TlsInfo};
 
 /// Defines the hermit entry version in the note section.
 #[macro_export]
@@ -118,10 +118,14 @@ impl BootInfo {
             (raw_boot_info.uartport != 0).then_some(SerialPortBase::new(uartport).unwrap());
 
         Self {
-            phys_addr_range,
-            kernel_image_addr_range,
-            tls_info,
-            serial_port_base,
+            hardware_info: HardwareInfo {
+                phys_addr_range,
+                serial_port_base,
+            },
+            load_info: LoadInfo {
+                kernel_image_addr_range,
+                tls_info,
+            },
             platform_info,
         }
     }

@@ -10,7 +10,7 @@
 mod loader;
 
 #[cfg(feature = "loader")]
-pub use loader::elf::{KernelObject, LoadInfo, LoadedKernel};
+pub use loader::elf::{KernelObject, LoadedKernel};
 
 #[cfg(feature = "kernel")]
 mod kernel;
@@ -64,20 +64,34 @@ pub type SerialPortBase = core::num::NonZeroU64;
 /// additional hardware and loader specific information.
 #[derive(Debug)]
 pub struct BootInfo {
+    /// Hardware information.
+    pub hardware_info: HardwareInfo,
+
+    /// Load information.
+    pub load_info: LoadInfo,
+
+    /// Platform information.
+    pub platform_info: PlatformInfo,
+}
+
+/// Hardware information.
+#[derive(Debug)]
+pub struct HardwareInfo {
     /// The range of all possible physical memory addresses.
     pub phys_addr_range: Range<u64>,
 
+    /// Serial port base address.
+    pub serial_port_base: Option<SerialPortBase>,
+}
+
+/// Load information.
+#[derive(Debug)]
+pub struct LoadInfo {
     /// The virtual address range of the loaded kernel image.
     pub kernel_image_addr_range: Range<u64>,
 
     /// Kernel image TLS information.
     pub tls_info: Option<TlsInfo>,
-
-    /// Serial port base address.
-    pub serial_port_base: Option<SerialPortBase>,
-
-    /// Platform information.
-    pub platform_info: PlatformInfo,
 }
 
 /// Platform information.

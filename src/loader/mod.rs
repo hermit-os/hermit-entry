@@ -12,8 +12,8 @@ impl RawBootInfo {
 
 impl From<BootInfo> for RawBootInfo {
     fn from(boot_info: BootInfo) -> Self {
-        let image_size =
-            boot_info.kernel_image_addr_range.end - boot_info.kernel_image_addr_range.start;
+        let image_size = boot_info.load_info.kernel_image_addr_range.end
+            - boot_info.load_info.kernel_image_addr_range.start;
 
         #[cfg(target_arch = "x86_64")]
         let mb_info;
@@ -58,9 +58,10 @@ impl From<BootInfo> for RawBootInfo {
         };
 
         #[cfg(target_arch = "x86_64")]
-        assert_eq!(0, boot_info.phys_addr_range.start);
+        assert_eq!(0, boot_info.hardware_info.phys_addr_range.start);
 
         let (tls_start, tls_filesz, tls_memsz, tls_align) = boot_info
+            .load_info
             .tls_info
             .map(|tls_info| {
                 (
@@ -73,6 +74,7 @@ impl From<BootInfo> for RawBootInfo {
             .unwrap_or_default();
 
         let uartport = boot_info
+            .hardware_info
             .serial_port_base
             .map(|serial_port_base| serial_port_base.get())
             .unwrap_or_default();
@@ -83,10 +85,10 @@ impl From<BootInfo> for RawBootInfo {
         Self {
             magic_number: Self::MAGIC_NUMBER,
             version: Self::VERSION,
-            base: boot_info.kernel_image_addr_range.start,
+            base: boot_info.load_info.kernel_image_addr_range.start,
             #[cfg(target_arch = "aarch64")]
-            ram_start: boot_info.phys_addr_range.start,
-            limit: boot_info.phys_addr_range.end,
+            ram_start: boot_info.hardware_info.phys_addr_range.start,
+            limit: boot_info.hardware_info.phys_addr_range.end,
             image_size,
             tls_start,
             tls_filesz,
