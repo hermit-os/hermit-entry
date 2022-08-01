@@ -19,7 +19,7 @@ mod kernel;
 pub use kernel::_Note;
 
 use core::{
-    num::NonZeroU64,
+    num::{NonZeroU32, NonZeroU64},
     ops::Range,
     sync::atomic::{AtomicU32, AtomicU64, Ordering},
 };
@@ -106,7 +106,7 @@ pub enum PlatformInfo {
         num_cpus: NonZeroU64,
 
         /// CPU frequency in kHz.
-        cpu_freq: u32,
+        cpu_freq: Option<NonZeroU32>,
 
         /// Boot time.
         boot_time: OffsetDateTime,

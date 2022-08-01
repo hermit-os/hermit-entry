@@ -1,5 +1,7 @@
 pub mod elf;
 
+use core::num::NonZeroU32;
+
 use crate::{BootInfo, PlatformInfo, RawBootInfo};
 
 impl RawBootInfo {
@@ -48,7 +50,7 @@ impl From<BootInfo> for RawBootInfo {
                     0,
                     0,
                     boot_time,
-                    cpu_freq / 1000,
+                    cpu_freq.map_or(0, NonZeroU32::get) / 1000,
                     u32::try_from(num_cpus.get()).unwrap(),
                     uhyve,
                 )

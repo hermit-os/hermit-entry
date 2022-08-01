@@ -1,4 +1,4 @@
-use core::sync::atomic::Ordering;
+use core::{num::NonZeroU32, sync::atomic::Ordering};
 
 use time::OffsetDateTime;
 
@@ -65,7 +65,7 @@ impl BootInfo {
             PlatformInfo::Uhyve {
                 has_pci,
                 num_cpus: u64::from(raw_boot_info.possible_cpus).try_into().unwrap(),
-                cpu_freq: raw_boot_info.cpu_freq * 1000,
+                cpu_freq: NonZeroU32::new(raw_boot_info.cpu_freq * 1000),
                 boot_time,
             }
         } else {
