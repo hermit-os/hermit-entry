@@ -1,3 +1,5 @@
+pub mod elf;
+
 use crate::{BootInfo, PlatformInfo, RawBootInfo};
 
 impl RawBootInfo {

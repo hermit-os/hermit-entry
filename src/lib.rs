@@ -9,6 +9,9 @@
 #[cfg(feature = "loader")]
 mod loader;
 
+#[cfg(feature = "loader")]
+pub use loader::elf::{KernelObject, LoadInfo, LoadedKernel};
+
 #[cfg(feature = "kernel")]
 mod kernel;
 
