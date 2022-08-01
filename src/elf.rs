@@ -18,7 +18,7 @@ use goblin::{
 use log::{info, warn};
 use plain::Plain;
 
-use crate::{LoadInfo, TlsInfo};
+use crate::boot_info::{LoadInfo, TlsInfo};
 
 #[cfg(target_arch = "x86_64")]
 const ELF_ARCH: u16 = goblin::elf::header::EM_X86_64;
@@ -49,7 +49,7 @@ pub struct KernelObject<'a> {
     relas: &'a [Rela],
 }
 
-pub fn align_up(addr: usize, align: usize) -> usize {
+fn align_up(addr: usize, align: usize) -> usize {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
     let align_mask = align - 1;
     if addr & align_mask == 0 {

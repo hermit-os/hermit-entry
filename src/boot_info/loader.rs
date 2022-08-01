@@ -1,8 +1,6 @@
-pub mod elf;
-
 use core::num::NonZeroU32;
 
-use crate::{BootInfo, PlatformInfo, RawBootInfo};
+use crate::boot_info::{BootInfo, PlatformInfo, RawBootInfo};
 
 impl RawBootInfo {
     const MAGIC_NUMBER: u32 = 0xC0DE_CAFEu32;
