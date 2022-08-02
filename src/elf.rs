@@ -139,23 +139,21 @@ impl<'a> KernelObject<'a> {
                 warn!("Kernel is not a hermit application");
             }
 
-            let note_section = phs.iter().find(|ph| ph.p_type == program_header::PT_NOTE);
-            if let Some(note_section) = note_section {
-                let mut note_iter = iter_notes(
-                    &elf[note_section.p_offset as usize..][..note_section.p_filesz as usize],
-                    note_section.p_align as usize,
-                );
-                if let Some(note) = note_iter
-                    .find(|note| note.name == "HERMIT" && note.ty == crate::NT_HERMIT_ENTRY_VERSION)
-                {
-                    if note.desc[0] != crate::HERMIT_ENTRY_VERSION {
-                        return Err(ParseKernelError("hermit entry version does not match"));
-                    }
-                } else {
-                    warn!("Kernel does not specify hermit entry version. This will be an error in the future.");
-                }
-            } else {
-                warn!("Kernel does not specify hermit entry version. This will be an error in the future.");
+            let note_section = phs
+                .iter()
+                .find(|ph| ph.p_type == program_header::PT_NOTE)
+                .ok_or(ParseKernelError("Kernel does not have note section"))?;
+            let mut note_iter = iter_notes(
+                &elf[note_section.p_offset as usize..][..note_section.p_filesz as usize],
+                note_section.p_align as usize,
+            );
+            let note = note_iter
+                .find(|note| note.name == "HERMIT" && note.ty == crate::NT_HERMIT_ENTRY_VERSION)
+                .ok_or(ParseKernelError(
+                    "Kernel does not specify hermit entry version",
+                ))?;
+            if note.desc[0] != crate::HERMIT_ENTRY_VERSION {
+                return Err(ParseKernelError("hermit entry version does not match"));
             }
 
             if !matches!(header.e_type, header::ET_DYN | header::ET_EXEC) {
