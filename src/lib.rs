@@ -5,8 +5,6 @@
 //! This crate also parses and loads RustyHermit applications ([`elf`]).
 
 #![no_std]
-#![cfg_attr(feature = "kernel", feature(const_ptr_offset_from))]
-#![cfg_attr(feature = "kernel", feature(const_refs_to_cell))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![warn(missing_docs)]
 

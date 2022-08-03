@@ -13,7 +13,6 @@ mod kernel;
 use core::{
     num::{NonZeroU32, NonZeroU64},
     ops::Range,
-    sync::atomic::{AtomicU64, Ordering},
 };
 
 use time::OffsetDateTime;
@@ -139,7 +138,11 @@ pub struct RawBootInfo {
     tls_memsz: u64,
     #[cfg(target_arch = "aarch64")]
     tls_align: u64,
-    current_stack_address: AtomicU64,
+
+    /// Current stack address (legacy)
+    ///
+    /// Was used to hold the current stack address and was mutated from the kernel.
+    current_stack_address: u64,
 
     /// The current percore address (legacy).
     ///
@@ -209,12 +212,4 @@ pub struct RawBootInfo {
 
     #[cfg(target_arch = "x86_64")]
     tls_align: u64,
-}
-
-impl RawBootInfo {
-    /// Stores the current stack address.
-    pub fn store_current_stack_address(&self, current_stack_address: u64) {
-        self.current_stack_address
-            .store(current_stack_address, Ordering::Relaxed);
-    }
 }

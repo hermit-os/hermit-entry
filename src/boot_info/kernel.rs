@@ -1,4 +1,4 @@
-use core::{num::NonZeroU32, sync::atomic::Ordering};
+use core::num::NonZeroU32;
 
 use time::OffsetDateTime;
 
@@ -91,19 +91,5 @@ impl BootInfo {
             },
             platform_info,
         }
-    }
-}
-
-impl RawBootInfo {
-    /// `current_stack_address` offset.
-    ///
-    /// Returns the offset of the field `current_stack_address` from the beginning of the `RawBootInfo` struct.
-    pub const fn current_stack_address_offset() -> usize {
-        memoffset::offset_of!(Self, current_stack_address)
-    }
-
-    /// Returns the current stack address.
-    pub fn load_current_stack_address(&self) -> u64 {
-        self.current_stack_address.load(Ordering::Relaxed)
     }
 }
