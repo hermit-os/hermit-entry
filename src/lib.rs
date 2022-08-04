@@ -22,6 +22,10 @@ pub use note::_Note;
 /// Kernel entry point.
 ///
 /// This is the signature of the entry point of the kernel.
+///
+/// `cpu_id` is the number of the CPU core with the boot processor being number 0.
+///
+/// The stack pointer has to be valid for the boot processor only.
 pub type Entry =
     unsafe extern "C" fn(raw_boot_info: &'static boot_info::RawBootInfo, cpu_id: u32) -> !;
 
