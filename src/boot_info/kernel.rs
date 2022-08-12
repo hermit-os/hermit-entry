@@ -1,95 +1,82 @@
-use core::num::NonZeroU32;
-
 use time::OffsetDateTime;
 
-use crate::boot_info::{
-    BootInfo, HardwareInfo, LoadInfo, PlatformInfo, RawBootInfo, SerialPortBase, TlsInfo,
+use super::{
+    BootInfo, HardwareInfo, LoadInfo, PlatformInfo, RawBootInfo, RawHardwareInfo, RawLoadInfo,
+    RawPlatformInfo, TlsInfo,
 };
 
-impl BootInfo {
-    /// Copies boot information from [`RawBootInfo`].
-    pub fn copy_from(raw_boot_info: &'_ RawBootInfo) -> Self {
-        #[cfg(target_arch = "x86_64")]
-        let phys_start = 0;
-        #[cfg(target_arch = "aarch64")]
-        let phys_start = raw_boot_info.ram_start;
-        let phys_addr_range = phys_start..raw_boot_info.limit;
+impl From<RawHardwareInfo> for HardwareInfo {
+    fn from(raw_hardware_info: RawHardwareInfo) -> Self {
+        Self {
+            phys_addr_range: raw_hardware_info.phys_addr_start..raw_hardware_info.phys_addr_end,
+            serial_port_base: raw_hardware_info.serial_port_base,
+        }
+    }
+}
 
-        let kernel_start = raw_boot_info.base;
-        let kernel_image_addr_range = kernel_start..kernel_start + raw_boot_info.image_size;
-
-        let uhyve = (raw_boot_info.uhyve & 0b1) == 0b1;
-        let platform_info = if uhyve {
-            let has_pci = (raw_boot_info.uhyve & 0b10) == 0b10;
-            let boot_time =
-                OffsetDateTime::from_unix_timestamp_nanos(raw_boot_info.boot_gtod as i128 * 1000)
-                    .unwrap();
-
-            PlatformInfo::Uhyve {
-                has_pci,
-                num_cpus: u64::from(raw_boot_info.possible_cpus).try_into().unwrap(),
-                cpu_freq: NonZeroU32::new(raw_boot_info.cpu_freq * 1000),
-                boot_time,
-            }
-        } else {
-            #[cfg(target_arch = "x86_64")]
-            {
-                use core::{slice, str};
-
-                let cmdline = raw_boot_info.cmdline as *const u8;
-                let command_line = (!cmdline.is_null()).then(|| {
-                    // SAFETY: cmdline and cmdsize are valid forever.
-                    let slice =
-                        unsafe { slice::from_raw_parts(cmdline, raw_boot_info.cmdsize as usize) };
-                    str::from_utf8(slice).unwrap()
-                });
-
-                PlatformInfo::Multiboot {
-                    command_line,
-                    multiboot_info_addr: raw_boot_info.mb_info.try_into().unwrap(),
-                }
-            }
-
-            #[cfg(target_arch = "aarch64")]
-            {
-                PlatformInfo::LinuxBoot
-            }
-        };
-
-        let tls_info = {
-            let (start, filesz, memsz, align) = (
-                raw_boot_info.tls_start,
-                raw_boot_info.tls_filesz,
-                raw_boot_info.tls_memsz,
-                raw_boot_info.tls_align,
-            );
-
-            (start != 0 || filesz != 0 || memsz != 0 || align != 0).then_some(TlsInfo {
-                start,
-                filesz,
-                memsz,
-                align,
-            })
-        };
-
-        #[cfg(target_arch = "x86_64")]
-        let uartport = raw_boot_info.uartport;
-        #[cfg(target_arch = "aarch64")]
-        let uartport = raw_boot_info.uartport.into();
-
-        let serial_port_base =
-            (raw_boot_info.uartport != 0).then_some(SerialPortBase::new(uartport).unwrap());
+impl From<RawLoadInfo> for LoadInfo {
+    fn from(raw_load_info: RawLoadInfo) -> Self {
+        let TlsInfo {
+            start,
+            filesz,
+            memsz,
+            align,
+        } = raw_load_info.tls_info;
 
         Self {
-            hardware_info: HardwareInfo {
-                phys_addr_range,
-                serial_port_base,
+            kernel_image_addr_range: raw_load_info.kernel_image_addr_start
+                ..raw_load_info.kernel_image_addr_end,
+            tls_info: (start != 0 || filesz != 0 || memsz != 0 || align != 0)
+                .then_some(raw_load_info.tls_info),
+        }
+    }
+}
+
+impl From<RawPlatformInfo> for PlatformInfo {
+    fn from(raw_platform_info: RawPlatformInfo) -> Self {
+        match raw_platform_info {
+            #[cfg(target_arch = "x86_64")]
+            RawPlatformInfo::Multiboot {
+                command_line_data,
+                command_line_len,
+                multiboot_info_addr,
+            } => {
+                let command_line = (!command_line_data.is_null()).then(|| {
+                    // SAFETY: cmdline and cmdsize are valid forever.
+                    let slice = unsafe {
+                        core::slice::from_raw_parts(command_line_data, command_line_len as usize)
+                    };
+                    core::str::from_utf8(slice).unwrap()
+                });
+
+                Self::Multiboot {
+                    command_line,
+                    multiboot_info_addr,
+                }
+            }
+            #[cfg(target_arch = "aarch64")]
+            RawPlatformInfo::LinuxBoot => Self::LinuxBoot,
+            RawPlatformInfo::Uhyve {
+                has_pci,
+                num_cpus,
+                cpu_freq,
+                boot_time,
+            } => Self::Uhyve {
+                has_pci,
+                num_cpus,
+                cpu_freq,
+                boot_time: OffsetDateTime::from_unix_timestamp_nanos(boot_time).unwrap(),
             },
-            load_info: LoadInfo {
-                kernel_image_addr_range,
-                tls_info,
-            },
-            platform_info,
+        }
+    }
+}
+
+impl From<RawBootInfo> for BootInfo {
+    fn from(raw_boot_info: RawBootInfo) -> Self {
+        Self {
+            hardware_info: raw_boot_info.hardware_info.into(),
+            load_info: raw_boot_info.load_info.into(),
+            platform_info: raw_boot_info.platform_info.into(),
         }
     }
 }

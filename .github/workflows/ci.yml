@@ -22,8 +22,10 @@ jobs:
           components: clippy
       - name: Clippy
         run: |
+          cargo clippy --target ${{ matrix.arch }}-unknown-linux-gnu
           cargo clippy --features loader --target ${{ matrix.arch }}-unknown-linux-gnu
           cargo clippy --features kernel --target ${{ matrix.arch }}-unknown-linux-gnu
+          cargo clippy --all-features --target ${{ matrix.arch }}-unknown-linux-gnu
         env:
           RUSTFLAGS: -Dwarnings
 
