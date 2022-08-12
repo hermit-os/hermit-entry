@@ -39,4 +39,4 @@ const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
 
 /// The current hermit entry version.
 #[cfg_attr(not(all(feature = "loader", feature = "kernel")), allow(dead_code))]
-const HERMIT_ENTRY_VERSION: u8 = 1;
+const HERMIT_ENTRY_VERSION: u8 = 2;
