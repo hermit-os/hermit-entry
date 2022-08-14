@@ -125,6 +125,7 @@ pub struct RawBootInfo {
 
 #[cfg_attr(not(feature = "kernel"), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
+#[repr(C)]
 struct RawHardwareInfo {
     phys_addr_start: u64,
     phys_addr_end: u64,
@@ -133,6 +134,7 @@ struct RawHardwareInfo {
 
 #[cfg_attr(not(feature = "kernel"), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
+#[repr(C)]
 struct RawLoadInfo {
     kernel_image_addr_start: u64,
     kernel_image_addr_end: u64,
@@ -141,6 +143,7 @@ struct RawLoadInfo {
 
 #[cfg_attr(not(all(feature = "loader", feature = "kernel")), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
+#[repr(C)]
 enum RawPlatformInfo {
     #[cfg(target_arch = "x86_64")]
     Multiboot {
