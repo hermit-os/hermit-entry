@@ -6,6 +6,7 @@ use core::{
     str,
 };
 
+use align_address::Align;
 use goblin::{
     elf::note::Nhdr32,
     elf64::{
@@ -49,18 +50,6 @@ pub struct KernelObject<'a> {
     relas: &'a [Rela],
 }
 
-fn align_up(addr: usize, align: usize) -> usize {
-    assert!(align.is_power_of_two(), "`align` must be a power of two");
-    let align_mask = align - 1;
-    if addr & align_mask == 0 {
-        addr // already aligned
-    } else {
-        (addr | align_mask)
-            .checked_add(1)
-            .expect("attempt to add with overflow")
-    }
-}
-
 struct NoteIterator<'a> {
     bytes: &'a [u8],
     align: usize,
@@ -80,9 +69,9 @@ impl<'a> Iterator for NoteIterator<'a> {
         let header = Nhdr32::from_bytes(self.bytes).ok()?;
         let mut offset = mem::size_of_val(header);
         let name = str::from_utf8(&self.bytes[offset..][..header.n_namesz as usize - 1]).unwrap();
-        offset = align_up(offset + header.n_namesz as usize, self.align);
+        offset = (offset + header.n_namesz as usize).align_up(self.align);
         let desc = &self.bytes[offset..][..header.n_descsz as usize];
-        offset = align_up(offset + header.n_descsz as usize, self.align);
+        offset = (offset + header.n_descsz as usize).align_up(self.align);
         self.bytes = &self.bytes[offset..];
         Some(Note {
             ty: header.n_type,
