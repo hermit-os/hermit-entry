@@ -10,10 +10,8 @@ mod loader;
 #[cfg(feature = "kernel")]
 mod kernel;
 
-use core::{
-    num::{NonZeroU32, NonZeroU64},
-    ops::Range,
-};
+use core::num::{NonZeroU32, NonZeroU64};
+use core::ops::Range;
 
 use time::OffsetDateTime;
 

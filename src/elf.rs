@@ -1,21 +1,14 @@
 //! Parsing and loading kernel objects from ELF files.
 
-use core::{
-    fmt,
-    mem::{self, MaybeUninit},
-    str,
-};
+use core::mem::{self, MaybeUninit};
+use core::{fmt, str};
 
 use align_address::Align;
-use goblin::{
-    elf::note::Nhdr32,
-    elf64::{
-        dynamic::{self, Dyn, DynamicInfo},
-        header::{self, Header},
-        program_header::{self, ProgramHeader},
-        reloc::{self, Rela},
-    },
-};
+use goblin::elf::note::Nhdr32;
+use goblin::elf64::dynamic::{self, Dyn, DynamicInfo};
+use goblin::elf64::header::{self, Header};
+use goblin::elf64::program_header::{self, ProgramHeader};
+use goblin::elf64::reloc::{self, Rela};
 use log::{info, warn};
 use plain::Plain;
 
