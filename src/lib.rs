@@ -43,7 +43,7 @@ const HERMIT_ENTRY_VERSION: u8 = 2;
 
 /// Offsets and values used to interpret the boot params ("zeropage") setup by firecracker
 /// For the full list of values see
-/// https://github.com/torvalds/linux/blob/b6839ef26e549de68c10359d45163b0cfb031183/arch/x86/include/uapi/asm/bootparam.h#L151-L198
+/// <https://github.com/torvalds/linux/blob/b6839ef26e549de68c10359d45163b0cfb031183/arch/x86/include/uapi/asm/bootparam.h#L151-L198>
 #[allow(missing_docs)]
 pub mod fc {
     pub const LINUX_KERNEL_BOOT_FLAG_MAGIC: u16 = 0xaa55;
