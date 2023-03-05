@@ -68,6 +68,24 @@ impl From<RawPlatformInfo> for PlatformInfo {
                 cpu_freq,
                 boot_time: OffsetDateTime::from_unix_timestamp_nanos(boot_time).unwrap(),
             },
+            RawPlatformInfo::LinuxBootParams {
+                command_line_data,
+                command_line_len,
+                boot_params_addr,
+            } => {
+                let command_line = (!command_line_data.is_null()).then(|| {
+                    // SAFETY: cmdline and cmdsize are valid forever.
+                    let slice = unsafe {
+                        core::slice::from_raw_parts(command_line_data, command_line_len as usize)
+                    };
+                    core::str::from_utf8(slice).unwrap()
+                });
+
+                Self::LinuxBootParams {
+                    command_line,
+                    boot_params_addr,
+                }
+            }
         }
     }
 }
