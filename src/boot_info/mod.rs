@@ -134,6 +134,7 @@ struct RawHardwareInfo {
     phys_addr_start: u64,
     phys_addr_end: u64,
     serial_port_base: Option<SerialPortBase>,
+    device_tree: Option<DeviceTreeAddress>,
 }
 
 #[cfg_attr(not(feature = "kernel"), allow(dead_code))]

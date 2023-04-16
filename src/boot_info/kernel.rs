@@ -10,6 +10,7 @@ impl From<RawHardwareInfo> for HardwareInfo {
         Self {
             phys_addr_range: raw_hardware_info.phys_addr_start..raw_hardware_info.phys_addr_end,
             serial_port_base: raw_hardware_info.serial_port_base,
+            device_tree: raw_hardware_info.device_tree,
         }
     }
 }
