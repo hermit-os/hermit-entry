@@ -97,6 +97,14 @@ pub enum PlatformInfo {
         /// Boot time.
         boot_time: OffsetDateTime,
     },
+    /// Usage of    Linux Boot Parameters
+    LinuxBootParams {
+        /// Command line passed to the kernel.
+        command_line: Option<&'static str>,
+
+        /// Address to Linux boot parameters.
+        boot_params_addr: core::num::NonZeroU64,
+    },
 }
 
 /// Thread local storage (TLS) image information.
@@ -163,5 +171,10 @@ enum RawPlatformInfo {
         num_cpus: NonZeroU64,
         cpu_freq: Option<NonZeroU32>,
         boot_time: i128,
+    },
+    LinuxBootParams {
+        command_line_data: *const u8,
+        command_line_len: u64,
+        boot_params_addr: core::num::NonZeroU64,
     },
 }

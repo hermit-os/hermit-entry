@@ -56,6 +56,16 @@ impl From<PlatformInfo> for RawPlatformInfo {
                 cpu_freq,
                 boot_time: boot_time.unix_timestamp_nanos(),
             },
+            PlatformInfo::LinuxBootParams {
+                command_line,
+                boot_params_addr,
+            } => Self::LinuxBootParams {
+                command_line_data: command_line
+                    .map(|s| s.as_ptr())
+                    .unwrap_or(core::ptr::null()),
+                command_line_len: command_line.map(|s| s.len() as u64).unwrap_or(0),
+                boot_params_addr,
+            },
         }
     }
 }
