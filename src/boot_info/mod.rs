@@ -23,6 +23,9 @@ pub type SerialPortBase = core::num::NonZeroU16;
 #[cfg(target_arch = "aarch64")]
 pub type SerialPortBase = core::num::NonZeroU64;
 
+/// Device tree address
+pub type DeviceTreeAddress = core::num::NonZeroU64;
+
 /// Boot information.
 ///
 /// This struct is built by the loader and consumed by the kernel.
@@ -48,6 +51,9 @@ pub struct HardwareInfo {
 
     /// Serial port base address.
     pub serial_port_base: Option<SerialPortBase>,
+
+    /// Address of the device tree
+    pub device_tree: Option<DeviceTreeAddress>,
 }
 
 /// Load information.
@@ -128,6 +134,7 @@ struct RawHardwareInfo {
     phys_addr_start: u64,
     phys_addr_end: u64,
     serial_port_base: Option<SerialPortBase>,
+    device_tree: Option<DeviceTreeAddress>,
 }
 
 #[cfg_attr(not(feature = "kernel"), allow(dead_code))]
