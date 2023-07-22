@@ -101,7 +101,7 @@ pub enum PlatformInfo {
         /// Boot time.
         boot_time: OffsetDateTime,
     },
-    /// Usage of    Linux Boot Parameters
+    /// Linux Boot Parameters.
     LinuxBootParams {
         /// Command line passed to the kernel.
         command_line: Option<&'static str>,
