@@ -23,6 +23,10 @@ pub type SerialPortBase = core::num::NonZeroU16;
 #[cfg(target_arch = "aarch64")]
 pub type SerialPortBase = core::num::NonZeroU64;
 
+/// Serial port base address
+#[cfg(target_arch = "riscv64")]
+pub type SerialPortBase = core::num::NonZeroU64;
+
 /// Device tree address
 pub type DeviceTreeAddress = core::num::NonZeroU64;
 

@@ -24,6 +24,11 @@ const ELF_ARCH: u16 = goblin::elf::header::EM_AARCH64;
 #[cfg(target_arch = "aarch64")]
 const R_RELATIVE: u32 = goblin::elf::reloc::R_AARCH64_RELATIVE;
 
+#[cfg(target_arch = "riscv64")]
+const ELF_ARCH: u16 = goblin::elf::header::EM_RISCV;
+#[cfg(target_arch = "riscv64")]
+const R_RELATIVE: u32 = goblin::elf::reloc::R_RISCV_RELATIVE;
+
 /// A parsed kernel object ready for loading.
 pub struct KernelObject<'a> {
     /// The raw bytes of the parsed ELF file.
