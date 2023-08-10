@@ -85,7 +85,7 @@ pub enum PlatformInfo {
         multiboot_info_addr: core::num::NonZeroU64,
     },
     /// Direct Linux Boot.
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
     LinuxBoot,
     /// Uhyve.
     Uhyve {
@@ -168,7 +168,7 @@ enum RawPlatformInfo {
         command_line_len: u64,
         multiboot_info_addr: core::num::NonZeroU64,
     },
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
     LinuxBoot,
     Uhyve {
         has_pci: bool,
