@@ -26,8 +26,20 @@ pub use note::_Note;
 /// `cpu_id` is the number of the CPU core with the boot processor being number 0.
 ///
 /// The stack pointer has to be valid for the boot processor only.
+#[cfg(not(target_arch = "riscv64"))]
 pub type Entry =
     unsafe extern "C" fn(raw_boot_info: &'static boot_info::RawBootInfo, cpu_id: u32) -> !;
+
+/// Kernel entry point.
+///
+/// This is the signature of the entry point of the kernel.
+///
+/// `hart_id` is the number of the hardware thread.
+///
+/// The stack pointer has to be valid for the boot processor only.
+#[cfg(target_arch = "riscv64")]
+pub type Entry =
+    unsafe extern "C" fn(hart_id: usize, raw_boot_info: &'static boot_info::RawBootInfo) -> !;
 
 /// Note type for specifying the hermit entry version.
 ///
