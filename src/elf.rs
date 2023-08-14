@@ -100,7 +100,7 @@ impl<'a> KernelObject<'a> {
         {
             let range = elf.as_ptr_range();
             let len = elf.len();
-            info!("Parsing kernel from ELF at {range:?} ({len} B)");
+            info!("Parsing kernel from ELF at {range:?} (len = {len:#x} B / {len} B)");
         }
 
         let header = plain::from_bytes::<Header>(elf).unwrap();
@@ -251,7 +251,7 @@ impl<'a> KernelObject<'a> {
                 let range =
                     tls_info.start as *const ()..(tls_info.start + tls_info.memsz) as *const ();
                 let len = tls_info.memsz;
-                info!("TLS is at {range:?} ({len} B)",);
+                info!("TLS is at {range:?} (len =  {len:#x} B / {len} B)",);
                 tls_info
             })
     }
@@ -266,7 +266,11 @@ impl<'a> KernelObject<'a> {
 
     /// Loads the kernel into the provided memory.
     pub fn load_kernel(&self, memory: &mut [MaybeUninit<u8>], start_addr: u64) -> LoadedKernel {
-        info!("Loading kernel to {memory:p}");
+        info!(
+            "Loading kernel to {:?} (len = {len:#x} B / {len} B)",
+            memory.as_ptr_range(),
+            len = memory.len()
+        );
 
         if !self.is_relocatable() {
             assert_eq!(self.start_addr().unwrap(), start_addr);
