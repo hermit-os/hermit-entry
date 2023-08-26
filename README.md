@@ -4,7 +4,7 @@
 [![docs.rs](https://img.shields.io/badge/docs.rs-documentation-green.svg)](https://docs.rs/hermit-entry/latest/hermit_entry/)
 [![CI](https://github.com/hermitcore/hermit-entry/actions/workflows/ci.yml/badge.svg)](https://github.com/hermitcore/hermit-entry/actions/workflows/ci.yml)
 
-RustyHermit's entry API.
+Hermit's loading and entry API.
 
 ## License
 

@@ -1,8 +1,8 @@
-//! # RustyHermit's entry API.
+//! # Hermit's loading and entry API.
 //!
-//! This crate unifies RustyHermit's entry API ([`Entry`]) for all loaders and the kernel.
+//! This crate parses and loads Hermit applications ([`elf`]).
 //!
-//! This crate also parses and loads RustyHermit applications ([`elf`]).
+//! Additionally, this crate unifies Hermit's entry API ([`Entry`]) for all loaders and the kernel.
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
