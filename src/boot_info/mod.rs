@@ -84,6 +84,12 @@ pub enum PlatformInfo {
         /// Multiboot boot information address.
         multiboot_info_addr: core::num::NonZeroU64,
     },
+    /// UEFI Boot
+    #[cfg(target_arch = "x86_64")]
+    Uefi {
+        /// Address of RSDP for ACPI
+        rsdp_addr: u64,
+    },
     /// Direct Linux Boot.
     #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
     LinuxBoot,
@@ -168,6 +174,8 @@ enum RawPlatformInfo {
         command_line_len: u64,
         multiboot_info_addr: core::num::NonZeroU64,
     },
+    #[cfg(target_arch = "x86_64")]
+    Uefi { rsdp_addr: u64 },
     #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
     LinuxBoot,
     Uhyve {
