@@ -66,7 +66,10 @@ impl From<RawPlatformInfo> for PlatformInfo {
                 has_pci,
                 num_cpus,
                 cpu_freq,
-                boot_time: OffsetDateTime::from_unix_timestamp_nanos(boot_time).unwrap(),
+                boot_time: OffsetDateTime::from_unix_timestamp_nanos(i128::from_ne_bytes(
+                    boot_time.0,
+                ))
+                .unwrap(),
             },
             RawPlatformInfo::LinuxBootParams {
                 command_line_data,
