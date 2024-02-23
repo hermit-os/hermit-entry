@@ -158,6 +158,17 @@ struct RawLoadInfo {
     tls_info: TlsInfo,
 }
 
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(target_arch = "x86_64", repr(C, align(8)))]
+#[cfg_attr(not(target_arch = "x86_64"), repr(transparent))]
+struct Align8<T>(pub T);
+
+impl<T> From<T> for Align8<T> {
+    fn from(value: T) -> Self {
+        Self(value)
+    }
+}
+
 #[cfg_attr(not(all(feature = "loader", feature = "kernel")), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
@@ -174,7 +185,7 @@ enum RawPlatformInfo {
         has_pci: bool,
         num_cpus: NonZeroU64,
         cpu_freq: Option<NonZeroU32>,
-        boot_time: i128,
+        boot_time: Align8<[u8; 16]>,
     },
     LinuxBootParams {
         command_line_data: *const u8,
