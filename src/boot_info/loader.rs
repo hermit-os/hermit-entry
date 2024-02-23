@@ -43,6 +43,8 @@ impl From<PlatformInfo> for RawPlatformInfo {
                 command_line_len: command_line.map(|s| s.len() as u64).unwrap_or(0),
                 multiboot_info_addr,
             },
+            #[cfg(target_arch = "x86_64")]
+            PlatformInfo::Uefi { rsdp_addr } => Self::Uefi { rsdp_addr },
             #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
             PlatformInfo::LinuxBoot => Self::LinuxBoot,
             PlatformInfo::Uhyve {
