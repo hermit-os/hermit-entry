@@ -89,6 +89,7 @@ impl From<RawPlatformInfo> for PlatformInfo {
                     boot_params_addr,
                 }
             }
+            RawPlatformInfo::Fdt => Self::Fdt,
         }
     }
 }

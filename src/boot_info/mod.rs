@@ -109,6 +109,11 @@ pub enum PlatformInfo {
         /// Address to Linux boot parameters.
         boot_params_addr: core::num::NonZeroU64,
     },
+    /// FDT.
+    ///
+    /// This is a transitional platform for migrating to FDTs.
+    /// The real platform information is stored in [`HardwareInfo::device_tree`].
+    Fdt,
 }
 
 /// Thread local storage (TLS) image information.
@@ -192,4 +197,5 @@ enum RawPlatformInfo {
         command_line_len: u64,
         boot_params_addr: core::num::NonZeroU64,
     },
+    Fdt,
 }

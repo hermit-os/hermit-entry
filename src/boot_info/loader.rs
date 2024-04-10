@@ -66,6 +66,7 @@ impl From<PlatformInfo> for RawPlatformInfo {
                 command_line_len: command_line.map(|s| s.len() as u64).unwrap_or(0),
                 boot_params_addr,
             },
+            PlatformInfo::Fdt => Self::Fdt,
         }
     }
 }
