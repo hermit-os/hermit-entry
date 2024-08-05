@@ -292,7 +292,7 @@ impl<'a> KernelObject<'a> {
                 let file_len = ph.p_filesz as usize;
                 let ph_file = &self.elf[ph.p_offset as usize..][..file_len];
                 // FIXME: Replace with `maybe_uninit_write_slice` once stable
-                let ph_file = unsafe { mem::transmute(ph_file) };
+                let ph_file = unsafe { mem::transmute::<&[u8], &[MaybeUninit<u8>]>(ph_file) };
                 ph_memory[..file_len].copy_from_slice(ph_file);
                 for byte in &mut ph_memory[file_len..] {
                     byte.write(0);
@@ -306,7 +306,7 @@ impl<'a> KernelObject<'a> {
                 let relocated = (start_addr as i64 + rela.r_addend).to_ne_bytes();
                 let buf = &relocated[..];
                 // FIXME: Replace with `maybe_uninit_write_slice` once stable
-                let buf = unsafe { mem::transmute(buf) };
+                let buf = unsafe { mem::transmute::<&[u8], &[MaybeUninit<u8>]>(buf) };
                 memory[rela.r_offset as usize..][..mem::size_of_val(&relocated)]
                     .copy_from_slice(buf);
             });
