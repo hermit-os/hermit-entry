@@ -159,8 +159,8 @@ impl<'a> KernelObject<'a> {
             .find(|program_header| program_header.p_type == program_header::PT_DYNAMIC)
             .map(|ph| {
                 let start = ph.p_offset as usize;
-                let len = (ph.p_filesz as usize) / dynamic::SIZEOF_DYN;
-                Dyn::slice_from_bytes_len(&elf[start..], len).unwrap()
+                let len = ph.p_filesz as usize;
+                Dyn::slice_from_bytes(&elf[start..][..len]).unwrap()
             })
             .unwrap_or_default();
 
@@ -175,8 +175,8 @@ impl<'a> KernelObject<'a> {
 
         let relas = {
             let start = dynamic_info.rela;
-            let len = dynamic_info.relacount;
-            Rela::slice_from_bytes_len(&elf[start..], len).unwrap()
+            let len = dynamic_info.relasz;
+            Rela::slice_from_bytes(&elf[start..][..len]).unwrap()
         };
 
         assert!(relas
