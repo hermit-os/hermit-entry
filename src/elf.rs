@@ -5,27 +5,45 @@ use core::{fmt, str};
 
 use align_address::Align;
 use goblin::elf::note::Nhdr32;
+use goblin::elf::reloc::r_to_str;
+use goblin::elf::section_header::{self, SHN_UNDEF};
+use goblin::elf::sym::{self, STB_WEAK};
 use goblin::elf64::dynamic::{self, Dyn, DynamicInfo};
 use goblin::elf64::header::{self, Header};
 use goblin::elf64::program_header::{self, ProgramHeader};
 use goblin::elf64::reloc::{self, Rela};
+use goblin::elf64::section_header::SectionHeader;
+use goblin::elf64::sym::Sym;
 use log::{info, warn};
 use plain::Plain;
 
 use crate::boot_info::{LoadInfo, TlsInfo};
 
+// See https://refspecs.linuxbase.org/elf/x86_64-abi-0.98.pdf
 #[cfg(target_arch = "x86_64")]
 const ELF_ARCH: u16 = goblin::elf::header::EM_X86_64;
 #[cfg(target_arch = "x86_64")]
+const R_ABS64: u32 = goblin::elf::reloc::R_X86_64_64;
+#[cfg(target_arch = "x86_64")]
 const R_RELATIVE: u32 = goblin::elf::reloc::R_X86_64_RELATIVE;
+#[cfg(target_arch = "x86_64")]
+const R_GLOB_DAT: u32 = goblin::elf::reloc::R_X86_64_GLOB_DAT;
 
+// See https://github.com/ARM-software/abi-aa/blob/2023Q3/aaelf64/aaelf64.rst#relocation
 #[cfg(target_arch = "aarch64")]
 const ELF_ARCH: u16 = goblin::elf::header::EM_AARCH64;
 #[cfg(target_arch = "aarch64")]
+const R_ABS64: u32 = goblin::elf::reloc::R_AARCH64_ABS64;
+#[cfg(target_arch = "aarch64")]
 const R_RELATIVE: u32 = goblin::elf::reloc::R_AARCH64_RELATIVE;
+#[cfg(target_arch = "aarch64")]
+const R_GLOB_DAT: u32 = goblin::elf::reloc::R_AARCH64_GLOB_DAT;
 
+/// https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/v1.0/riscv-elf.adoc#relocations
 #[cfg(target_arch = "riscv64")]
 const ELF_ARCH: u16 = goblin::elf::header::EM_RISCV;
+#[cfg(target_arch = "riscv64")]
+const R_ABS64: u32 = goblin::elf::reloc::R_RISCV_64;
 #[cfg(target_arch = "riscv64")]
 const R_RELATIVE: u32 = goblin::elf::reloc::R_RISCV_RELATIVE;
 
@@ -46,6 +64,9 @@ pub struct KernelObject<'a> {
 
     /// Relocations with an explicit addend.
     relas: &'a [Rela],
+
+    /// Symbol table for relocations
+    dynsyms: &'a [Sym],
 }
 
 struct NoteIterator<'a> {
@@ -109,6 +130,12 @@ impl<'a> KernelObject<'a> {
             let start = header.e_phoff as usize;
             let len = header.e_phnum as usize;
             ProgramHeader::slice_from_bytes_len(&elf[start..], len).unwrap()
+        };
+
+        let shs = {
+            let start = header.e_shoff as usize;
+            let len = header.e_shnum as usize;
+            SectionHeader::slice_from_bytes_len(&elf[start..], len).unwrap()
         };
 
         // General compatibility checks
@@ -179,15 +206,22 @@ impl<'a> KernelObject<'a> {
             Rela::slice_from_bytes(&elf[start..][..len]).unwrap()
         };
 
-        assert!(relas
+        let dynsyms = shs
             .iter()
-            .all(|rela| reloc::r_type(rela.r_info) == R_RELATIVE));
+            .find(|section_header| section_header.sh_type == section_header::SHT_DYNSYM)
+            .map(|sh| {
+                let start = sh.sh_offset as usize;
+                let len = sh.sh_size as usize;
+                Sym::slice_from_bytes(&elf[start..][..len]).unwrap()
+            })
+            .unwrap_or_default();
 
         Ok(KernelObject {
             elf,
             header,
             phs,
             relas,
+            dynsyms,
         })
     }
 
@@ -302,13 +336,64 @@ impl<'a> KernelObject<'a> {
         if self.is_relocatable() {
             // Perform relocations
             self.relas.iter().for_each(|rela| {
-                assert_eq!(R_RELATIVE, reloc::r_type(rela.r_info));
-                let relocated = (start_addr as i64 + rela.r_addend).to_ne_bytes();
-                let buf = &relocated[..];
-                // FIXME: Replace with `maybe_uninit_write_slice` once stable
-                let buf = unsafe { mem::transmute::<&[u8], &[MaybeUninit<u8>]>(buf) };
-                memory[rela.r_offset as usize..][..mem::size_of_val(&relocated)]
-                    .copy_from_slice(buf);
+                match reloc::r_type(rela.r_info) {
+                    R_ABS64 => {
+                        let sym = reloc::r_sym(rela.r_info) as usize;
+                        let sym = &self.dynsyms[sym];
+
+                        if sym::st_bind(sym.st_info) == STB_WEAK
+                            && u32::from(sym.st_shndx) == SHN_UNDEF
+                        {
+                            let memory = &memory[rela.r_offset as usize..][..8];
+                            let memory =
+                                unsafe { mem::transmute::<&[MaybeUninit<u8>], &[u8]>(memory) };
+                            assert_eq!(memory, &[0; 8]);
+                            return;
+                        }
+
+                        let relocated =
+                            (start_addr as i64 + sym.st_value as i64 + rela.r_addend).to_ne_bytes();
+                        let buf = &relocated[..];
+                        // FIXME: Replace with `maybe_uninit_write_slice` once stable
+                        let buf = unsafe { mem::transmute::<&[u8], &[MaybeUninit<u8>]>(buf) };
+                        memory[rela.r_offset as usize..][..mem::size_of_val(&relocated)]
+                            .copy_from_slice(buf);
+                    }
+                    R_RELATIVE => {
+                        let relocated = (start_addr as i64 + rela.r_addend).to_ne_bytes();
+                        let buf = &relocated[..];
+                        // FIXME: Replace with `maybe_uninit_write_slice` once stable
+                        let buf = unsafe { mem::transmute::<&[u8], &[MaybeUninit<u8>]>(buf) };
+                        memory[rela.r_offset as usize..][..mem::size_of_val(&relocated)]
+                            .copy_from_slice(buf);
+                    }
+                    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+                    R_GLOB_DAT => {
+                        let sym = reloc::r_sym(rela.r_info) as usize;
+                        let sym = &self.dynsyms[sym];
+
+                        if sym::st_bind(sym.st_info) == STB_WEAK
+                            && u32::from(sym.st_shndx) == SHN_UNDEF
+                        {
+                            let memory = &memory[rela.r_offset as usize..][..8];
+                            let memory =
+                                unsafe { mem::transmute::<&[MaybeUninit<u8>], &[u8]>(memory) };
+                            assert_eq!(memory, &[0; 8]);
+                            return;
+                        }
+
+                        let relocated =
+                            (start_addr as i64 + sym.st_value as i64 + rela.r_addend).to_ne_bytes();
+                        #[cfg(target_arch = "x86_64")]
+                        assert_eq!(rela.r_addend, 0);
+                        let buf = &relocated[..];
+                        // FIXME: Replace with `maybe_uninit_write_slice` once stable
+                        let buf = unsafe { mem::transmute::<&[u8], &[MaybeUninit<u8>]>(buf) };
+                        memory[rela.r_offset as usize..][..mem::size_of_val(&relocated)]
+                            .copy_from_slice(buf);
+                    }
+                    typ => panic!("unkown relocation type {}", r_to_str(typ, ELF_ARCH)),
+                }
             });
         }
 
