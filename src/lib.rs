@@ -51,7 +51,7 @@ const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
 
 /// The current hermit entry version.
 #[cfg_attr(not(all(feature = "loader", feature = "kernel")), allow(dead_code))]
-const HERMIT_ENTRY_VERSION: u8 = 4;
+const HERMIT_ENTRY_VERSION: u8 = 5;
 
 /// Offsets and values used to interpret the boot params ("zeropage") setup by firecracker
 /// For the full list of values see

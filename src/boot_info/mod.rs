@@ -100,6 +100,18 @@ pub enum PlatformInfo {
 
         /// Boot time.
         boot_time: OffsetDateTime,
+
+        /// Command line (program name and command line arguments) passed to
+        /// the kernel.
+        command_line: Option<&'static str>,
+
+        /// Environment variables: First element is a pointer to the beginning
+        /// of the envp, second element is a pointer to the beginning of the
+        /// raw env data. The length of the envp is
+        /// `(env.0 - env.1) / size_of::<u64>()`.
+        /// The last pointer in envp points to the end of the environemen data,
+        /// and not to a valid environment variable!
+        env: Option<(NonZeroU64, NonZeroU64)>,
     },
     /// Linux Boot Parameters.
     LinuxBootParams {
@@ -191,6 +203,9 @@ enum RawPlatformInfo {
         num_cpus: NonZeroU64,
         cpu_freq: Option<NonZeroU32>,
         boot_time: Align8<[u8; 16]>,
+        env: Option<(NonZeroU64, NonZeroU64)>,
+        command_line_data: *const u8,
+        command_line_len: u64,
     },
     LinuxBootParams {
         command_line_data: *const u8,
