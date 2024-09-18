@@ -62,15 +62,29 @@ impl From<RawPlatformInfo> for PlatformInfo {
                 num_cpus,
                 cpu_freq,
                 boot_time,
-            } => Self::Uhyve {
-                has_pci,
-                num_cpus,
-                cpu_freq,
-                boot_time: OffsetDateTime::from_unix_timestamp_nanos(i128::from_ne_bytes(
-                    boot_time.0,
-                ))
-                .unwrap(),
-            },
+                command_line_data,
+                command_line_len,
+                env,
+            } => {
+                let command_line = (!command_line_data.is_null()).then(|| {
+                    // SAFETY: cmdline and cmdsize are valid forever.
+                    let slice = unsafe {
+                        core::slice::from_raw_parts(command_line_data, command_line_len as usize)
+                    };
+                    core::str::from_utf8(slice).unwrap()
+                });
+                Self::Uhyve {
+                    has_pci,
+                    num_cpus,
+                    cpu_freq,
+                    boot_time: OffsetDateTime::from_unix_timestamp_nanos(i128::from_ne_bytes(
+                        boot_time.0,
+                    ))
+                    .unwrap(),
+                    command_line,
+                    env,
+                }
+            }
             RawPlatformInfo::LinuxBootParams {
                 command_line_data,
                 command_line_len,

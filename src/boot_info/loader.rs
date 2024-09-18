@@ -50,11 +50,18 @@ impl From<PlatformInfo> for RawPlatformInfo {
                 num_cpus,
                 cpu_freq,
                 boot_time,
+                command_line,
+                env,
             } => Self::Uhyve {
                 has_pci,
                 num_cpus,
                 cpu_freq,
                 boot_time: boot_time.unix_timestamp_nanos().to_ne_bytes().into(),
+                env,
+                command_line_data: command_line
+                    .map(|s| s.as_ptr())
+                    .unwrap_or(core::ptr::null()),
+                command_line_len: command_line.map(|s| s.len() as u64).unwrap_or(0),
             },
             PlatformInfo::LinuxBootParams {
                 command_line,
