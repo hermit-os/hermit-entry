@@ -144,7 +144,6 @@ pub struct RawBootInfo {
     platform_info: RawPlatformInfo,
 }
 
-#[cfg_attr(not(feature = "kernel"), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 struct RawHardwareInfo {
@@ -154,7 +153,6 @@ struct RawHardwareInfo {
     device_tree: Option<DeviceTreeAddress>,
 }
 
-#[cfg_attr(not(feature = "kernel"), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 struct RawLoadInfo {
