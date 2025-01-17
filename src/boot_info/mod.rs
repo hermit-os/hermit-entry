@@ -172,7 +172,7 @@ impl<T> From<T> for Align8<T> {
     }
 }
 
-#[cfg_attr(not(all(feature = "loader", feature = "kernel")), allow(dead_code))]
+#[cfg_attr(not(all(feature = "loader", feature = "kernel")), expect(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 enum RawPlatformInfo {

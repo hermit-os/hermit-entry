@@ -47,17 +47,17 @@ pub type Entry =
 /// The note name for this is `HERMIT`.
 ///
 /// The `desc` field will be 1 word, which specifies the hermit entry version.
-#[cfg_attr(not(any(feature = "loader", feature = "kernel")), allow(dead_code))]
+#[cfg_attr(not(any(feature = "loader", feature = "kernel")), expect(dead_code))]
 const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
 
 /// The current hermit entry version.
-#[cfg_attr(not(any(feature = "loader", feature = "kernel")), allow(dead_code))]
+#[cfg_attr(not(any(feature = "loader", feature = "kernel")), expect(dead_code))]
 const HERMIT_ENTRY_VERSION: u8 = 4;
 
 /// Offsets and values used to interpret the boot params ("zeropage") setup by firecracker
 /// For the full list of values see
 /// <https://github.com/torvalds/linux/blob/b6839ef26e549de68c10359d45163b0cfb031183/arch/x86/include/uapi/asm/bootparam.h#L151-L198>
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 pub mod fc {
     pub const LINUX_KERNEL_BOOT_FLAG_MAGIC: u16 = 0xaa55;
     pub const LINUX_KERNEL_HRD_MAGIC: u32 = 0x53726448;
