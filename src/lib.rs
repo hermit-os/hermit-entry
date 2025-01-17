@@ -17,6 +17,7 @@ pub mod elf;
 mod note;
 
 #[cfg(feature = "kernel")]
+#[doc(hidden)]
 pub use note::_Note;
 
 /// Kernel entry point.
