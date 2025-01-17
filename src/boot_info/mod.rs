@@ -144,7 +144,6 @@ pub struct RawBootInfo {
     platform_info: RawPlatformInfo,
 }
 
-#[cfg_attr(not(feature = "kernel"), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 struct RawHardwareInfo {
@@ -154,7 +153,6 @@ struct RawHardwareInfo {
     device_tree: Option<DeviceTreeAddress>,
 }
 
-#[cfg_attr(not(feature = "kernel"), allow(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 struct RawLoadInfo {
@@ -174,7 +172,7 @@ impl<T> From<T> for Align8<T> {
     }
 }
 
-#[cfg_attr(not(all(feature = "loader", feature = "kernel")), allow(dead_code))]
+#[cfg_attr(not(all(feature = "loader", feature = "kernel")), expect(dead_code))]
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 enum RawPlatformInfo {
