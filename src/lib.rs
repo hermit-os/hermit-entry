@@ -16,9 +16,13 @@ pub mod elf;
 #[cfg(feature = "kernel")]
 mod note;
 
+use core::fmt;
+
+#[doc(hidden)]
+pub use const_parse::parse_u128 as _parse_u128;
 #[cfg(feature = "kernel")]
 #[doc(hidden)]
-pub use note::_Note;
+pub use note::{_AbiTag, _Note};
 
 /// Kernel entry point.
 ///
@@ -70,4 +74,33 @@ pub mod fc {
     pub const RAMDISK_SIZE_OFFSET: usize = 43;
     pub const CMD_LINE_PTR_OFFSET: usize = 55;
     pub const CMD_LINE_SIZE_OFFSET: usize = 71;
+}
+
+#[cfg_attr(not(any(feature = "loader", feature = "kernel")), expect(dead_code))]
+const NT_GNU_ABI_TAG: u32 = 1;
+#[cfg_attr(not(any(feature = "loader", feature = "kernel")), expect(dead_code))]
+const ELF_NOTE_OS_HERMIT: u32 = 6;
+
+/// A Hermit version.
+#[derive(Clone, Copy, Debug)]
+pub struct HermitVersion {
+    /// The major version of Hermit.
+    pub major: u32,
+
+    /// The minor version of Hermit.
+    pub minor: u32,
+
+    /// The patch version of Hermit.
+    pub patch: u32,
+}
+
+impl fmt::Display for HermitVersion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self {
+            major,
+            minor,
+            patch,
+        } = self;
+        write!(f, "{major}.{minor}.{patch}")
+    }
 }
