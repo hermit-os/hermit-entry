@@ -115,7 +115,7 @@ impl fmt::Display for ParseKernelError {
     }
 }
 
-impl<'a> KernelObject<'a> {
+impl KernelObject<'_> {
     /// Parses raw bytes of an ELF file into a loadable kernel object.
     pub fn parse(elf: &[u8]) -> Result<KernelObject<'_>, ParseKernelError> {
         {
