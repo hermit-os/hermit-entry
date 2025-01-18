@@ -18,6 +18,7 @@ use log::{info, warn};
 use plain::Plain;
 
 use crate::boot_info::{LoadInfo, TlsInfo};
+use crate::HermitVersion;
 
 // See https://refspecs.linuxbase.org/elf/x86_64-abi-0.98.pdf
 #[cfg(target_arch = "x86_64")]
@@ -67,8 +68,12 @@ pub struct KernelObject<'a> {
 
     /// Symbol table for relocations
     dynsyms: &'a [Sym],
+
+    /// The kernel's Hermit version if any.
+    hermit_version: Option<HermitVersion>,
 }
 
+#[derive(Clone)]
 struct NoteIterator<'a> {
     bytes: &'a [u8],
     align: usize,
@@ -102,6 +107,36 @@ impl<'a> Iterator for NoteIterator<'a> {
 
 fn iter_notes(bytes: &[u8], align: usize) -> NoteIterator<'_> {
     NoteIterator { bytes, align }
+}
+
+#[derive(Debug)]
+struct ParseHermitVersionError;
+
+impl TryFrom<Note<'_>> for HermitVersion {
+    type Error = ParseHermitVersionError;
+
+    fn try_from(value: Note<'_>) -> Result<Self, Self::Error> {
+        if value.name != "GNU" {
+            return Err(ParseHermitVersionError);
+        }
+
+        if value.ty != crate::NT_GNU_ABI_TAG {
+            return Err(ParseHermitVersionError);
+        }
+
+        let data = <[u8; 16]>::try_from(value.desc).map_err(|_| ParseHermitVersionError)?;
+        let data = unsafe { mem::transmute::<[u8; 16], [u32; 4]>(data) };
+
+        if data[0] != crate::ELF_NOTE_OS_HERMIT {
+            return Err(ParseHermitVersionError);
+        }
+
+        Ok(Self {
+            major: data[1],
+            minor: data[2],
+            patch: data[3],
+        })
+    }
 }
 
 /// An error returned when parsing a kernel ELF fails.
@@ -138,6 +173,22 @@ impl KernelObject<'_> {
             SectionHeader::slice_from_bytes_len(&elf[start..], len).unwrap()
         };
 
+        let note_section = phs
+            .iter()
+            .find(|ph| ph.p_type == program_header::PT_NOTE)
+            .ok_or(ParseKernelError("Kernel does not have note section"))?;
+        let mut note_iter = iter_notes(
+            &elf[note_section.p_offset as usize..][..note_section.p_filesz as usize],
+            note_section.p_align as usize,
+        );
+
+        let hermit_version = note_iter
+            .clone()
+            .find_map(|note| HermitVersion::try_from(note).ok());
+        if let Some(hermit_version) = hermit_version {
+            info!("Found Hermit version {hermit_version}");
+        }
+
         // General compatibility checks
         {
             let class = header.e_ident[header::EI_CLASS];
@@ -153,14 +204,6 @@ impl KernelObject<'_> {
                 warn!("Kernel is not a hermit application");
             }
 
-            let note_section = phs
-                .iter()
-                .find(|ph| ph.p_type == program_header::PT_NOTE)
-                .ok_or(ParseKernelError("Kernel does not have note section"))?;
-            let mut note_iter = iter_notes(
-                &elf[note_section.p_offset as usize..][..note_section.p_filesz as usize],
-                note_section.p_align as usize,
-            );
             let note = note_iter
                 .find(|note| note.name == "HERMIT" && note.ty == crate::NT_HERMIT_ENTRY_VERSION)
                 .ok_or(ParseKernelError(
@@ -222,7 +265,13 @@ impl KernelObject<'_> {
             phs,
             relas,
             dynsyms,
+            hermit_version,
         })
+    }
+
+    /// Returns the Hermit version of this kernel if present.
+    pub fn hermit_version(&self) -> Option<HermitVersion> {
+        self.hermit_version
     }
 
     /// Required memory size for loading.
