@@ -16,7 +16,9 @@ pub mod elf;
 #[cfg(feature = "kernel")]
 mod note;
 
+use core::error::Error;
 use core::fmt;
+use core::str::FromStr;
 
 #[doc(hidden)]
 pub use const_parse::parse_u128 as _parse_u128;
@@ -105,6 +107,38 @@ impl fmt::Display for HermitVersion {
     }
 }
 
+impl FromStr for HermitVersion {
+    type Err = ParseHermitVersionError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (major, rest) = s.split_once('.').ok_or(ParseHermitVersionError)?;
+        let (minor, patch) = rest.split_once('.').ok_or(ParseHermitVersionError)?;
+
+        let major = major.parse().map_err(|_| ParseHermitVersionError)?;
+        let minor = minor.parse().map_err(|_| ParseHermitVersionError)?;
+        let patch = patch.parse().map_err(|_| ParseHermitVersionError)?;
+
+        Ok(Self {
+            major,
+            minor,
+            patch,
+        })
+    }
+}
+
+/// An error which can be returned when parsing a [`HermitVersion`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct ParseHermitVersionError;
+
+impl fmt::Display for ParseHermitVersionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("provided string could not be parsed as Hermit version")
+    }
+}
+
+impl Error for ParseHermitVersionError {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -126,5 +160,28 @@ mod tests {
         assert!(small == small);
         assert!(big == big);
         assert!(big > small);
+    }
+
+    #[test]
+    fn parse_hermit_version() {
+        let version = HermitVersion::from_str("0.1.2").unwrap();
+        assert_eq!(
+            version,
+            HermitVersion {
+                major: 0,
+                minor: 1,
+                patch: 2,
+            }
+        );
+
+        let version = HermitVersion::from_str("2.1.0").unwrap();
+        assert_eq!(
+            version,
+            HermitVersion {
+                major: 2,
+                minor: 1,
+                patch: 0,
+            }
+        );
     }
 }
