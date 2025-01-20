@@ -82,7 +82,7 @@ const NT_GNU_ABI_TAG: u32 = 1;
 const ELF_NOTE_OS_HERMIT: u32 = 6;
 
 /// A Hermit version.
-#[derive(Clone, Copy, Debug)]
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct HermitVersion {
     /// The major version of Hermit.
     pub major: u32,
@@ -102,5 +102,29 @@ impl fmt::Display for HermitVersion {
             patch,
         } = self;
         write!(f, "{major}.{minor}.{patch}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cmp_hermit_version() {
+        let small = HermitVersion {
+            major: 0,
+            minor: 1,
+            patch: 2,
+        };
+        let big = HermitVersion {
+            major: 2,
+            minor: 1,
+            patch: 0,
+        };
+
+        assert!(small < big);
+        assert!(small == small);
+        assert!(big == big);
+        assert!(big > small);
     }
 }
