@@ -295,7 +295,11 @@ impl KernelObject<'_> {
         mem_size.try_into().unwrap()
     }
 
-    fn is_relocatable(&self) -> bool {
+    /// Checks whether a unikernel is relocatable.
+    ///
+    /// Currently used internally by [crate::elf::KernelObject::start_addr]
+    /// and [crate::elf::KernelObject::tls_info].
+    pub fn is_relocatable(&self) -> bool {
         match self.header.e_type {
             header::ET_DYN => true,
             header::ET_EXEC => false,
@@ -316,7 +320,10 @@ impl KernelObject<'_> {
         })
     }
 
-    fn tls_info(&self, start_addr: u64) -> Option<TlsInfo> {
+    /// Returns TLS info.
+    ///
+    /// If this returns [`None`], this information is not available.
+    pub fn tls_info(&self, start_addr: u64) -> Option<TlsInfo> {
         self.phs
             .iter()
             .find(|ph| ph.p_type == program_header::PT_TLS)
@@ -339,7 +346,12 @@ impl KernelObject<'_> {
             })
     }
 
-    fn entry_point(&self, start_addr: u64) -> u64 {
+    /// Returns the unikernel's entry point.
+    ///
+    /// If the binary is relocatable, a hypervisor-provided start address can
+    /// be passed so as to account for potential relocations. `start_addr` must
+    /// match the address passed to [crate::elf::KernelObject::load_kernel].
+    pub fn entry_point(&self, start_addr: u64) -> u64 {
         let mut entry_point = self.header.e_entry;
         if self.is_relocatable() {
             entry_point += start_addr;
