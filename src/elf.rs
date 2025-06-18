@@ -325,17 +325,12 @@ impl KernelObject<'_> {
                 if self.is_relocatable() {
                     tls_start += start_addr;
                 }
-                let tls_info = TlsInfo {
+                TlsInfo {
                     start: tls_start,
                     filesz: ph.p_filesz,
                     memsz: ph.p_memsz,
                     align: ph.p_align,
-                };
-                let range =
-                    tls_info.start as *const ()..(tls_info.start + tls_info.memsz) as *const ();
-                let len = tls_info.memsz;
-                info!("TLS is at {range:?} (len =  {len:#x} B / {len} B)",);
-                tls_info
+                }
             })
     }
 
@@ -446,10 +441,18 @@ impl KernelObject<'_> {
             });
         }
 
+        let tls_info = self.tls_info(start_addr);
+
+        if let Some(tls_info) = &tls_info {
+            let range = tls_info.start as *const ()..(tls_info.start + tls_info.memsz) as *const ();
+            let len = tls_info.memsz;
+            info!("TLS is at {range:?} (len =  {len:#x} B / {len} B)",);
+        }
+
         LoadedKernel {
             load_info: LoadInfo {
                 kernel_image_addr_range: start_addr..start_addr + self.mem_size() as u64,
-                tls_info: self.tls_info(start_addr),
+                tls_info,
             },
             entry_point: self.entry_point(start_addr),
         }
