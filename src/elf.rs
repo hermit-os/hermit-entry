@@ -73,6 +73,21 @@ pub struct KernelObject<'a> {
     hermit_version: Option<HermitVersion>,
 }
 
+impl<'a> fmt::Debug for KernelObject<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let start_addr = self.start_addr();
+        f.debug_struct("KernelObject")
+            .field("hermit_version", &self.hermit_version)
+            .field("start_address", &start_addr)
+            .field(
+                "entry_point",
+                &format_args!("{:#x}", self.entry_point(start_addr.unwrap_or_default())),
+            )
+            .field("tls_info", &self.tls_info(start_addr.unwrap_or_default()))
+            .finish()
+    }
+}
+
 #[derive(Clone)]
 struct NoteIterator<'a> {
     bytes: &'a [u8],
