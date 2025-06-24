@@ -10,6 +10,7 @@ mod loader;
 #[cfg(feature = "kernel")]
 mod kernel;
 
+use core::fmt;
 use core::num::{NonZeroU32, NonZeroU64};
 use core::ops::Range;
 
@@ -118,7 +119,7 @@ pub enum PlatformInfo {
 
 /// Thread local storage (TLS) image information.
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct TlsInfo {
     /// The start address of the TLS image.
     pub start: u64,
@@ -131,6 +132,17 @@ pub struct TlsInfo {
 
     /// `align` of the TLS program header.
     pub align: u64,
+}
+
+impl fmt::Debug for TlsInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TlsInfo")
+            .field("start", &format_args!("{:#x}", self.start))
+            .field("filesz", &format_args!("{:#x}", self.filesz))
+            .field("memsz", &format_args!("{:#x}", self.memsz))
+            .field("align", &format_args!("{:#x}", self.align))
+            .finish()
+    }
 }
 
 /// The raw boot information struct.
