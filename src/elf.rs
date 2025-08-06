@@ -211,9 +211,17 @@ impl KernelObject<'_> {
                 return Err(ParseKernelError("kernel ist not a 64-bit object"));
             }
             let data_encoding = header.e_ident[header::EI_DATA];
+
+            #[cfg(target_endian = "little")]
             if data_encoding != header::ELFDATA2LSB {
                 return Err(ParseKernelError("kernel object is not little endian"));
             }
+
+            #[cfg(target_endian = "big")]
+            if data_encoding != header::ELFDATA2MSB {
+                return Err(ParseKernelError("kernel object is not big endian"));
+            }
+
             let os_abi = header.e_ident[header::EI_OSABI];
             if os_abi != header::ELFOSABI_STANDALONE {
                 warn!("Kernel is not a hermit application");
