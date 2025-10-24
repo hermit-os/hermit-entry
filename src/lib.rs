@@ -139,6 +139,16 @@ impl fmt::Display for ParseHermitVersionError {
 
 impl Error for ParseHermitVersionError {}
 
+/// A Uhyve interface version.
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Copy, Debug)]
+pub struct UhyveIfVersion(pub u32);
+
+impl fmt::Display for UhyveIfVersion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
