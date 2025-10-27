@@ -18,7 +18,7 @@ use log::{info, warn};
 use plain::Plain;
 
 use crate::boot_info::{LoadInfo, TlsInfo};
-use crate::HermitVersion;
+use crate::{HermitVersion, UhyveIfVersion};
 
 // See https://refspecs.linuxbase.org/elf/x86_64-abi-0.98.pdf
 #[cfg(target_arch = "x86_64")]
@@ -71,6 +71,9 @@ pub struct KernelObject<'a> {
 
     /// The kernel's Hermit version if any.
     hermit_version: Option<HermitVersion>,
+
+    /// The kernel's Uhyve interface version if any.
+    uhyve_interface_version: Option<UhyveIfVersion>,
 }
 
 impl<'a> fmt::Debug for KernelObject<'a> {
@@ -154,6 +157,28 @@ impl TryFrom<Note<'_>> for HermitVersion {
     }
 }
 
+#[derive(Debug)]
+struct ParseUhyveIfVersionError;
+
+impl TryFrom<Note<'_>> for UhyveIfVersion {
+    type Error = ParseUhyveIfVersionError;
+
+    fn try_from(value: Note<'_>) -> Result<Self, Self::Error> {
+        if value.name != "UHYVEIF" {
+            return Err(ParseUhyveIfVersionError);
+        }
+
+        if value.ty != uhyve_interface::elf::NT_UHYVE_INTERFACE_VERSION {
+            return Err(ParseUhyveIfVersionError);
+        }
+
+        let data = <[u8; 4]>::try_from(value.desc).map_err(|_| ParseUhyveIfVersionError)?;
+        let data = u32::from_ne_bytes(data);
+
+        Ok(Self(data))
+    }
+}
+
 /// An error returned when parsing a kernel ELF fails.
 #[derive(Debug)]
 pub struct ParseKernelError(&'static str);
@@ -202,6 +227,13 @@ impl KernelObject<'_> {
             .find_map(|note| HermitVersion::try_from(note).ok());
         if let Some(hermit_version) = hermit_version {
             info!("Found Hermit version {hermit_version}");
+        }
+
+        let uhyve_interface_version: Option<UhyveIfVersion> = note_iter
+            .clone()
+            .find_map(|note| UhyveIfVersion::try_from(note).ok());
+        if let Some(uhyve_interface_version) = uhyve_interface_version {
+            info!("Found Uhyve interface version {uhyve_interface_version}");
         }
 
         // General compatibility checks
@@ -289,12 +321,18 @@ impl KernelObject<'_> {
             relas,
             dynsyms,
             hermit_version,
+            uhyve_interface_version,
         })
     }
 
     /// Returns the Hermit version of this kernel if present.
     pub fn hermit_version(&self) -> Option<HermitVersion> {
         self.hermit_version
+    }
+
+    /// Returns the Hermit version of this kernel if present.
+    pub fn uhyve_interface_version(&self) -> Option<UhyveIfVersion> {
+        self.uhyve_interface_version
     }
 
     /// Required memory size for loading.
