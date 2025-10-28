@@ -7,38 +7,43 @@ on:
 jobs:
   clippy:
     name: Clippy
-    strategy:
-      matrix:
-        arch: [x86_64, aarch64, riscv64gc]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
-          target: ${{ matrix.arch }}-unknown-linux-gnu
+          targets: aarch64-unknown-linux-gnu, riscv64gc-unknown-linux-gnu, x86_64-unknown-linux-gnu
           components: clippy
       - name: Clippy
         run: |
-          cargo clippy --target ${{ matrix.arch }}-unknown-linux-gnu
-          cargo clippy --features loader --target ${{ matrix.arch }}-unknown-linux-gnu
-          cargo clippy --features kernel --target ${{ matrix.arch }}-unknown-linux-gnu
-          cargo clippy --all-features --target ${{ matrix.arch }}-unknown-linux-gnu
+          cargo clippy --target aarch64-unknown-linux-gnu
+          cargo clippy --features loader --target aarch64-unknown-linux-gnu
+          cargo clippy --features kernel --target aarch64-unknown-linux-gnu
+          cargo clippy --all-features --target aarch64-unknown-linux-gnu
+          cargo clippy --target riscv64gc-unknown-linux-gnu
+          cargo clippy --features loader --target riscv64gc-unknown-linux-gnu
+          cargo clippy --features kernel --target riscv64gc-unknown-linux-gnu
+          cargo clippy --all-features --target riscv64gc-unknown-linux-gnu
+          cargo clippy --target x86_64-unknown-linux-gnu
+          cargo clippy --features loader --target x86_64-unknown-linux-gnu
+          cargo clippy --features kernel --target x86_64-unknown-linux-gnu
+          cargo clippy --all-features --target x86_64-unknown-linux-gnu
         env:
           RUSTFLAGS: -Dwarnings
 
   doc:
     name: Check documentation
-    strategy:
-      matrix:
-        arch: [x86_64, aarch64, riscv64gc]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
-          target: ${{ matrix.arch }}-unknown-linux-gnu
+          targets: aarch64-unknown-linux-gnu, riscv64gc-unknown-linux-gnu, x86_64-unknown-linux-gnu
       - name: Check documentation
-        run: cargo doc --all-features --target ${{ matrix.arch }}-unknown-linux-gnu
+        run: |
+          cargo doc --all-features --target aarch64-unknown-linux-gnu
+          cargo doc --all-features --target riscv64gc-unknown-linux-gnu
+          cargo doc --all-features --target x86_64-unknown-linux-gnu
         env:
           RUSTDOCFLAGS: -Dwarnings
 
