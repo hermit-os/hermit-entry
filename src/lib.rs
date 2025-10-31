@@ -8,13 +8,27 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![warn(missing_docs)]
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 pub mod boot_info;
+
+#[cfg(feature = "config")]
+pub mod config;
 
 #[cfg(feature = "loader")]
 pub mod elf;
 
+mod filename;
+pub use filename::{Filename, StrFilename};
+
 #[cfg(feature = "kernel")]
 mod note;
+
+pub mod tar_parser;
+
+#[cfg(feature = "thin-tree")]
+pub mod thin_tree;
 
 use core::error::Error;
 use core::fmt;
@@ -25,6 +39,35 @@ pub use const_parse::parse_u128 as _parse_u128;
 #[cfg(feature = "kernel")]
 #[doc(hidden)]
 pub use note::{_AbiTag, _Note};
+
+/// Possible input formats for a Hermit loader.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Format {
+    // An ELF kernel image.
+    ElfKernel,
+    // A gzipped tar file containing a config + ELF kernel image, and associated files.
+    Image,
+}
+
+/// Attempts to detect the format of an input file (using magic bytes), whether it is an ELF kernel or an image.
+pub fn detect_format(data: &[u8]) -> Option<Format> {
+    if data.len() < 8 {
+        None
+    } else if data[0] == 0x7f
+        && data[1] == b'E'
+        && data[2] == b'L'
+        && data[3] == b'F'
+        && data[7] == 0xff
+    {
+        // ELF with vendor-specific ABI => assume ELF kernel
+        Some(Format::ElfKernel)
+    } else if data[0] == 0x1f && data[1] == 0x8b && data[2] == 0x08 {
+        // gzip => assume image
+        Some(Format::Image)
+    } else {
+        None
+    }
+}
 
 /// Kernel entry point.
 ///
@@ -147,6 +190,19 @@ impl fmt::Display for UhyveIfVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
+}
+
+#[cfg(feature = "compression")]
+/// We assume that all Hermit images are gzip-compressed
+pub fn decompress_image(
+    data: &[u8],
+) -> Result<alloc::vec::Vec<u8>, compression::prelude::CompressionError> {
+    use compression::prelude::{DecodeExt as _, GZipDecoder};
+
+    data.iter()
+        .copied()
+        .decode(&mut GZipDecoder::new())
+        .collect()
 }
 
 #[cfg(test)]
