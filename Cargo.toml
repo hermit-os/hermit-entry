@@ -22,13 +22,60 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dependencies]
 align-address = "0.3"
 const_parse = "1"
-goblin = { version = "0.10", default-features = false, features = ["elf64"], optional = true }
 log = { version = "0.4", optional = true }
 plain = { version = "0.2", optional = true }
 time = { version = "0.3", default-features = false }
 uhyve-interface = "0.1"
 
+[dependencies.byte-unit]
+version = "5"
+default-features = false
+features = ["byte", "serde"]
+optional = true
+
+[dependencies.compression]
+version = "0.1"
+default-features = false
+features = ["gzip"]
+optional = true
+
+[dependencies.goblin]
+version = "0.10"
+default-features = false
+features = ["elf64"]
+optional = true
+
+[dependencies.num-traits]
+version = "0.2"
+default-features = false
+
+[dependencies.serde]
+version = "1"
+default-features = false
+features = ["alloc", "derive"]
+optional = true
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["parse", "serde"]
+optional = true
+
+[dependencies.yoke]
+version = "0.8"
+default-features = false
+features = ["derive"]
+optional = true
+
+[dev-dependencies.proptest]
+version = "1.9"
+
 [features]
 default = []
-loader = ["log", "goblin", "plain"]
+std = ["alloc", "compression/std"]
+alloc = []
+compression = ["alloc", "dep:compression"]
+loader = ["dep:log", "dep:goblin", "dep:plain"]
 kernel = []
+config = ["alloc", "dep:byte-unit", "dep:serde", "dep:toml"]
+thin-tree = ["alloc", "dep:yoke"]
