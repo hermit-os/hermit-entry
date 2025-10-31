@@ -22,3 +22,20 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
+
+## Hermit images
+
+This Rust crate also implements a basic reader for Hermit images.
+Overall, these are just `.tar.gz` (i.e. gzipped tar) files.
+
+They contain at least 2 special entries:
+* The config file (in TOML format), at `hermit.toml` in the image root.
+  The expected entries are described in the crate documentation in `hermit_entry::config::Config` (requires enabling the `config` feature).
+* A Hermit Kernel ELF file, whose path is specified in the config.
+
+For performance reasons, it should be preferred to put the config and kernel
+as the first two entries of the image (tar files don't have any sorting or index,
+except that normally, the latest entry of the file takes precedence).
+
+All subdirectories of the image itself are mapped
+(from the Hermit kernel perspective) into `/`.

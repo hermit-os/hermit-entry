@@ -8,13 +8,24 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![warn(missing_docs)]
 
+extern crate alloc;
+
 pub mod boot_info;
+
+#[cfg(feature = "config")]
+pub mod config;
 
 #[cfg(feature = "loader")]
 pub mod elf;
 
+mod filename;
+pub use filename::Filename;
+
 #[cfg(feature = "kernel")]
 mod note;
+
+pub mod tar_parser;
+pub mod thin_tree;
 
 use core::error::Error;
 use core::fmt;
@@ -177,6 +188,46 @@ impl fmt::Display for UhyveIfVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
+}
+
+#[cfg(feature = "loader")]
+/// We assume that all images are gzip-compressed
+pub fn decompress_image(
+    data: &[u8],
+) -> Result<alloc::boxed::Box<tar_parser::Bytes>, compression::prelude::CompressionError> {
+    use compression::prelude::{DecodeExt as _, GZipDecoder};
+
+    data.iter()
+        .copied()
+        .decode(&mut GZipDecoder::new())
+        .collect::<Result<alloc::boxed::Box<[u8]>, _>>()
+        // SAFETY: tar_parser::Bytes has the same layout as [u8] due to repr(transparent)
+        .map(|i| unsafe { core::mem::transmute(i) })
+}
+
+#[cfg(all(feature = "allocator-api2", feature = "loader"))]
+/// We assume that all images are gzip-compressed
+pub fn decompress_image_with_allocator<A: allocator_api2::alloc::Allocator>(
+    data: &[u8],
+    alloc: A,
+) -> Result<allocator_api2::boxed::Box<tar_parser::Bytes, A>, compression::prelude::CompressionError>
+{
+    use allocator_api2 as alloca2;
+    use compression::prelude::{DecodeExt as _, GZipDecoder};
+
+    // we don't know the final capacity,
+    // but the actual length usually won't be smaller than the input
+    let mut ret = alloca2::vec::Vec::with_capacity_in(data.len(), alloc);
+
+    for i in data.iter().copied().decode(&mut GZipDecoder::new()) {
+        let i = i?;
+        ret.push(i);
+    }
+
+    let ret = ret.into_boxed_slice();
+    let (ptr, alloc): (*mut [u8], _) = alloca2::boxed::Box::into_raw_with_allocator(ret);
+    // SAFETY: tar_parser::Bytes has the same layout as [u8] due to repr(transparent)
+    Ok(unsafe { alloca2::boxed::Box::from_raw_in(ptr as *mut tar_parser::Bytes, alloc) })
 }
 
 #[cfg(test)]
