@@ -173,7 +173,7 @@ impl TryFrom<Note<'_>> for UhyveIfVersion {
         }
 
         let data = <[u8; 4]>::try_from(value.desc).map_err(|_| ParseUhyveIfVersionError)?;
-        let data = u32::from_ne_bytes(data);
+        let data = u32::from_be_bytes(data);
 
         Ok(Self(data))
     }
