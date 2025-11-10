@@ -26,6 +26,36 @@ pub use const_parse::parse_u128 as _parse_u128;
 #[doc(hidden)]
 pub use note::{_AbiTag, _Note};
 
+/// GZIP magic number.
+///
+/// For details, see [10.17487/RFC1952](https://doi.org/10.17487/RFC1952).
+#[cfg(feature = "loader")]
+const GZIPMAG: &[u8; 3] = &[0x1f, 0x8b, 0x08];
+
+/// Possible input formats for a Hermit loader.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg(feature = "loader")]
+pub enum Format {
+    /// An ELF file, probably a Hermit kernel.
+    Elf,
+    /// A gzipped tar file, probably containing a config + ELF kernel image, and associated files.
+    Gzip,
+}
+
+/// Attempts to detect the format of an input file (using magic bytes), whether it is an ELF kernel or an image.
+#[cfg(feature = "loader")]
+pub fn detect_format(data: &[u8]) -> Option<Format> {
+    if data.len() < 4 {
+        None
+    } else if data.starts_with(goblin::elf64::header::ELFMAG) {
+        Some(Format::Elf)
+    } else if data.starts_with(GZIPMAG) {
+        Some(Format::Gzip)
+    } else {
+        None
+    }
+}
+
 /// Kernel entry point.
 ///
 /// This is the signature of the entry point of the kernel.
