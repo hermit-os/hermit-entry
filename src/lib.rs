@@ -90,6 +90,10 @@ const NT_HERMIT_ENTRY_VERSION: u32 = 0x5a00;
 #[cfg_attr(not(any(feature = "loader", feature = "kernel")), expect(dead_code))]
 const HERMIT_ENTRY_VERSION: u8 = 4;
 
+/// Note type for specifying the Uhyve interface version in an elf header.
+#[cfg_attr(not(any(feature = "loader", feature = "kernel")), expect(dead_code))]
+const NT_UHYVE_INTERFACE_VERSION: u32 = 0x5b00;
+
 /// Offsets and values used to interpret the boot params ("zeropage") setup by firecracker
 /// For the full list of values see
 /// <https://github.com/torvalds/linux/blob/b6839ef26e549de68c10359d45163b0cfb031183/arch/x86/include/uapi/asm/bootparam.h#L151-L198>

@@ -3,5 +3,6 @@
 
 hermit_entry::define_abi_tag!();
 hermit_entry::define_entry_version!();
+hermit_entry::define_uhyve_interface_version!(1);
 
 fn main() {}
