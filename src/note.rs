@@ -10,7 +10,7 @@ use crate::HermitVersion;
 macro_rules! define_entry_version {
     () => {
         #[used]
-        #[link_section = ".note.hermit.entry-version"]
+        #[unsafe(link_section = ".note.hermit.entry-version")]
         static ENTRY_VERSION: $crate::_Note<1> = $crate::_Note::entry_version();
     };
 }
@@ -23,7 +23,7 @@ macro_rules! define_entry_version {
 macro_rules! define_uhyve_interface_version {
     () => {
         #[used]
-        #[link_section = ".note.hermit.uhyve-interface-version"]
+        #[unsafe(link_section = ".note.hermit.uhyve-interface-version")]
         static INTERFACE_VERSION: $crate::_Note<4> =
             $crate::_Note::uhyveif_version(uhyve_interface::UHYVE_INTERFACE_VERSION);
     };
