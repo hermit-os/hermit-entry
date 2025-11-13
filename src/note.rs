@@ -53,7 +53,7 @@ struct Nhdr32 {
 macro_rules! define_abi_tag {
     () => {
         #[used]
-        #[link_section = ".note.ABI-tag"]
+        #[unsafe(link_section = ".note.ABI-tag")]
         static ABI_TAG: $crate::_AbiTag = $crate::_AbiTag::new($crate::HermitVersion {
             major: $crate::_parse_u128(::core::env!("CARGO_PKG_VERSION_MAJOR")) as u32,
             minor: $crate::_parse_u128(::core::env!("CARGO_PKG_VERSION_MINOR")) as u32,
