@@ -4,6 +4,9 @@
 
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::fmt;
+
+use crate::ThinTree;
 
 /// The default configuration file name, relative to the image root.
 pub const DEFAULT_CONFIG_NAME: &str = "hermit.toml";
@@ -58,4 +61,55 @@ pub struct Requirements {
 #[inline]
 pub fn parse(data: &[u8]) -> Result<Config, ParserError> {
     toml::from_slice(data)
+}
+
+/// An error from [`ThinTree::handle_config`].
+#[derive(Clone, Debug)]
+pub enum HandleConfigError {
+    /// [`DEFAULT_CONFIG_NAME`]
+    /// either couldn't be found in the image or isn't a regular file.
+    ConfigResolve(crate::ResolveToLeafError),
+    /// The Hermit image configuration file failed to parse.
+    ConfigParserError(ParserError),
+    /// The Kernel specified in the image configuration file
+    /// either couldn't be found in the image or isn't a regular file.
+    KernelResolve(crate::ResolveToLeafError),
+}
+
+impl fmt::Display for HandleConfigError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ConfigResolve(e) => {
+                write!(f, "couldn't find Hermit image configuration file: {e}")
+            }
+            Self::ConfigParserError(e) => write!(f, "Hermit image configuration is invalid: {e}"),
+            Self::KernelResolve(e) => write!(f, "couldn't find Hermit kernel in image: {e}"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for HandleConfigError {}
+
+impl<'a> ThinTree<'a> {
+    /// A convenience function to handle looking up the config in a thin tree and
+    /// retrieve the kernel slice.
+    pub fn handle_config(&self) -> Result<(Config, &'a [u8]), HandleConfigError> {
+        let config = parse(
+            self.resolve_to_leaf(DEFAULT_CONFIG_NAME.into())
+                .map_err(HandleConfigError::ConfigResolve)?
+                .0,
+        )
+        .map_err(HandleConfigError::ConfigParserError)?;
+
+        let kernel_slice = match &config {
+            Config::V1 { kernel, .. } => {
+                self.resolve_to_leaf((**kernel).into())
+                    .map_err(HandleConfigError::KernelResolve)?
+                    .0
+            }
+        };
+
+        Ok((config, kernel_slice))
+    }
 }

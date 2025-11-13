@@ -1,6 +1,7 @@
 //! A thin (directory) tree (i.e. it doesn't own the data it points to) implementation.
 
 use alloc::collections::btree_map::BTreeMap;
+use core::fmt;
 
 use crate::Filename;
 use crate::tar_parser::{Bytes, FileMetadata, Parser, ParserError};
@@ -17,6 +18,28 @@ pub enum ThinTree<'a> {
     /// A (sub-)directory
     Directory(BTreeMap<&'a [u8], ThinTree<'a>>),
 }
+
+/// An error from [`ThinTree::resolve_to_leaf`] or [`ThinTree::resolve_mut_to_leaf`],
+/// to distinguish between "entry couldn't be found" and "entry isn't a leaf".
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ResolveToLeafError {
+    /// The entry couldn't be found.
+    NotFound,
+    /// The entry was found, but is a directory instead of a regular file / leaf.
+    IsDirectory,
+}
+
+impl fmt::Display for ResolveToLeafError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotFound => write!(f, "file node not found"),
+            Self::IsDirectory => write!(f, "expected file, got directory"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ResolveToLeafError {}
 
 impl<'a> ThinTree<'a> {
     /// Populate a thin directory tree, with `entry` pointing to `content`
@@ -79,6 +102,20 @@ impl<'a> ThinTree<'a> {
         })
     }
 
+    /// Resolve a file name in a thin tree and making sure it is a leaf / file node
+    pub fn resolve_to_leaf(
+        &self,
+        entry: Filename<'_>,
+    ) -> Result<(&'a [u8], &FileMetadata), ResolveToLeafError> {
+        if let Self::File { content, metadata } =
+            self.resolve(entry).ok_or(ResolveToLeafError::NotFound)?
+        {
+            Ok((*content, metadata))
+        } else {
+            Err(ResolveToLeafError::IsDirectory)
+        }
+    }
+
     /// Resolve a file name in a thin tree (mutable version)
     pub fn resolve_mut(&mut self, mut entry: Filename<'_>) -> Option<&mut Self> {
         entry.try_fold(self, move |this, i| {
@@ -88,5 +125,20 @@ impl<'a> ThinTree<'a> {
                 None
             }
         })
+    }
+
+    /// Resolve a file name in a thin tree and making sure it is a leaf / file node (mutable version)
+    pub fn resolve_mut_to_leaf(
+        &mut self,
+        entry: Filename<'_>,
+    ) -> Result<(&mut &'a [u8], &mut FileMetadata), ResolveToLeafError> {
+        if let Self::File { content, metadata } = self
+            .resolve_mut(entry)
+            .ok_or(ResolveToLeafError::NotFound)?
+        {
+            Ok((content, metadata))
+        } else {
+            Err(ResolveToLeafError::IsDirectory)
+        }
     }
 }

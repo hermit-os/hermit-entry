@@ -4,7 +4,7 @@
 //!
 //! Additionally, this crate unifies Hermit's entry API ([`Entry`]) for all loaders and the kernel.
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![warn(missing_docs)]
 
@@ -25,8 +25,8 @@ pub use filename::Filename;
 mod note;
 
 pub mod tar_parser;
-pub mod thin_tree;
 
+mod thin_tree;
 use core::error::Error;
 use core::fmt;
 use core::str::FromStr;
@@ -36,6 +36,7 @@ pub use const_parse::parse_u128 as _parse_u128;
 #[cfg(feature = "kernel")]
 #[doc(hidden)]
 pub use note::{_AbiTag, _Note};
+pub use thin_tree::{ResolveToLeafError, ThinTree};
 
 /// GZIP magic number.
 ///
