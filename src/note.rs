@@ -10,7 +10,7 @@ use crate::HermitVersion;
 macro_rules! define_entry_version {
     () => {
         #[used]
-        #[link_section = ".note.hermit.entry-version"]
+        #[unsafe(link_section = ".note.hermit.entry-version")]
         static ENTRY_VERSION: $crate::_Note = $crate::_Note::entry_version();
     };
 }
