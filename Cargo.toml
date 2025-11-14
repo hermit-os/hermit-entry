@@ -21,14 +21,42 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 align-address = "0.3"
+allocator-api2 = { version = "0.3", default-features = false, features = ["alloc"], optional = true }
+compression = { version = "0.1", default-features = false, features = ["gzip"], optional = true }
 const_parse = "1"
 goblin = { version = "0.10", default-features = false, features = ["elf64"], optional = true }
 log = { version = "0.4", optional = true }
+num-traits = { version = "0.2", default-features = false }
 plain = { version = "0.2", optional = true }
 time = { version = "0.3", default-features = false }
 uhyve-interface = "0.1"
+yoke = { version = "0.8", default-features = false, features = ["derive"] }
+
+[dependencies.byte-unit]
+version = "5"
+default-features = false
+features = ["byte", "serde"]
+optional = true
+
+[dependencies.serde]
+version = "1"
+default-features = false
+features = ["alloc", "derive"]
+optional = true
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["parse", "serde"]
+optional = true
+
+[dev-dependencies]
+proptest = "1.9"
 
 [features]
 default = []
-loader = ["log", "goblin", "plain"]
+std = ["compression/std"]
+allocator-api2 = ["dep:allocator-api2"]
+loader = ["config", "dep:compression", "dep:log", "dep:goblin", "dep:plain"]
 kernel = []
+config = ["dep:byte-unit", "dep:serde", "dep:toml"]
