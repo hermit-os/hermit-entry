@@ -26,9 +26,14 @@ goblin = { version = "0.10", default-features = false, features = ["elf64"], opt
 log = { version = "0.4", optional = true }
 plain = { version = "0.2", optional = true }
 time = { version = "0.3", default-features = false }
-uhyve-interface = "0.1"
 
 [features]
 default = []
 loader = ["log", "goblin", "plain"]
 kernel = []
+
+[[example]]
+# this is also kinda an integration test to check that building with the macros works
+# and the linked result is correct.
+name = "macros"
+required-features = ["kernel"]

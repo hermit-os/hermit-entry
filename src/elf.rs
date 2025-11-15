@@ -168,7 +168,7 @@ impl TryFrom<Note<'_>> for UhyveIfVersion {
             return Err(ParseUhyveIfVersionError);
         }
 
-        if value.ty != uhyve_interface::elf::NT_UHYVE_INTERFACE_VERSION {
+        if value.ty != crate::NT_UHYVE_INTERFACE_VERSION {
             return Err(ParseUhyveIfVersionError);
         }
 
