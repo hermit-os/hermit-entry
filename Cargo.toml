@@ -32,3 +32,9 @@ uhyve-interface = "0.1"
 default = []
 loader = ["log", "goblin", "plain"]
 kernel = []
+
+[[example]]
+# this is also kinda an integration test to check that building with the macros works
+# and the linked result is correct.
+name = "macros"
+required-features = ["kernel"]
