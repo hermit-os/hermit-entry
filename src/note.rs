@@ -11,19 +11,42 @@ macro_rules! define_entry_version {
     () => {
         #[used]
         #[unsafe(link_section = ".note.hermit.entry-version")]
-        static ENTRY_VERSION: $crate::_Note = $crate::_Note::entry_version();
+        static ENTRY_VERSION: $crate::_Note<1> = $crate::_Note::entry_version();
+    };
+}
+
+/// Defines the Uhyve interface version in the note section.
+///
+/// This macro must be used in a module that is guaranteed to be linked.
+/// See <https://github.com/rust-lang/rust/issues/99721>.
+///
+/// # Examples
+///
+/// ```
+/// # mod uhyve_interface {
+/// #     pub const UHYVE_INTERFACE_VERSION: u32 = 1;
+/// # }
+/// #
+/// hermit_entry::define_uhyve_interface_version!(uhyve_interface::UHYVE_INTERFACE_VERSION);
+/// ```
+#[macro_export]
+macro_rules! define_uhyve_interface_version {
+    ($version:expr) => {
+        #[used]
+        #[unsafe(link_section = ".note.hermit.uhyve-interface-version")]
+        static INTERFACE_VERSION: $crate::_Note<4> = $crate::_Note::uhyveif_version($version);
     };
 }
 
 #[repr(C)]
 #[doc(hidden)]
-pub struct _Note {
+pub struct _Note<const N: usize> {
     header: Nhdr32,
     name: [u8; 8],
-    data: [u8; 1],
+    data: [u8; N],
 }
 
-impl _Note {
+impl _Note<1> {
     pub const fn entry_version() -> Self {
         Self {
             header: Nhdr32 {
@@ -33,6 +56,20 @@ impl _Note {
             },
             name: *b"HERMIT\0\0",
             data: [crate::HERMIT_ENTRY_VERSION],
+        }
+    }
+}
+
+impl _Note<4> {
+    pub const fn uhyveif_version(ver: u32) -> Self {
+        Self {
+            header: Nhdr32 {
+                n_namesz: 8,
+                n_descsz: 4,
+                n_type: crate::NT_UHYVE_INTERFACE_VERSION,
+            },
+            name: *b"UHYVEIF\0",
+            data: ver.to_be_bytes(),
         }
     }
 }
