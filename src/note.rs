@@ -6,6 +6,7 @@ use crate::HermitVersion;
 ///
 /// This macro must be used in a module that is guaranteed to be linked.
 /// See <https://github.com/rust-lang/rust/issues/99721>.
+#[cfg_attr(docsrs, doc(cfg(feature = "kernel")))]
 #[macro_export]
 macro_rules! define_entry_version {
     () => {
@@ -29,6 +30,7 @@ macro_rules! define_entry_version {
 /// #
 /// hermit_entry::define_uhyve_interface_version!(uhyve_interface::UHYVE_INTERFACE_VERSION);
 /// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "kernel")))]
 #[macro_export]
 macro_rules! define_uhyve_interface_version {
     ($version:expr) => {
@@ -86,6 +88,7 @@ struct Nhdr32 {
 /// The version is saved in `.note.ABI-tag` in accordance with [LSB].
 ///
 /// [LSB]: https://refspecs.linuxfoundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/noteabitag.html
+#[cfg_attr(docsrs, doc(cfg(feature = "kernel")))]
 #[macro_export]
 macro_rules! define_abi_tag {
     () => {
