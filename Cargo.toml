@@ -1,6 +1,6 @@
 [package]
 name = "hermit-entry"
-version = "0.10.6"
+version = "0.10.7"
 authors = ["Martin Kröning <mkroening@posteo.net>"]
 edition = "2024"
 description = "Hermit's loading and entry API."
