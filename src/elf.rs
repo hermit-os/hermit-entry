@@ -240,7 +240,7 @@ impl KernelObject<'_> {
         {
             let class = header.e_ident[header::EI_CLASS];
             if class != header::ELFCLASS64 {
-                return Err(ParseKernelError("kernel ist not a 64-bit object"));
+                return Err(ParseKernelError("kernel is not a 64-bit object"));
             }
             let data_encoding = header.e_ident[header::EI_DATA];
 
@@ -497,7 +497,7 @@ impl KernelObject<'_> {
                         memory[rela.r_offset as usize..][..mem::size_of_val(&relocated)]
                             .copy_from_slice(buf);
                     }
-                    typ => panic!("unkown relocation type {}", r_to_str(typ, ELF_ARCH)),
+                    typ => panic!("unknown relocation type {}", r_to_str(typ, ELF_ARCH)),
                 }
             });
         }
