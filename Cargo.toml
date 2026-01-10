@@ -21,7 +21,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 align-address = "0.3"
+allocator-api2 = { version = "0.3",  optional = true, default-features = false, features = ["alloc"] }
 byte-unit =      { version = "5",    optional = true, default-features = false, features = ["byte", "serde"] }
+compression =    { version = "0.1",  optional = true, default-features = false, features = ["gzip"] }
 const_parse = "1"
 goblin =         { version = "0.10", optional = true, default-features = false, features = ["elf64"] }
 log =            { version = "0.4",  optional = true }
@@ -33,8 +35,9 @@ toml =           { version = "0.9",  optional = true, default-features = false, 
 
 [features]
 default = []
+allocator-api2 = ["dep:allocator-api2"]
 config = ["dep:byte-unit", "dep:serde", "dep:tar-no-std", "dep:toml"]
-loader = ["config", "dep:log", "dep:goblin", "dep:plain"]
+loader = ["config", "dep:compression", "dep:log", "dep:goblin", "dep:plain"]
 kernel = []
 
 [[test]]
