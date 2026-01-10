@@ -29,7 +29,7 @@ time = { version = "0.3", default-features = false }
 
 [features]
 default = []
-loader = ["log", "goblin", "plain"]
+loader = ["dep:log", "dep:goblin", "dep:plain"]
 kernel = []
 
 [[test]]
