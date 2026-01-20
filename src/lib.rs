@@ -98,6 +98,7 @@ const NT_UHYVE_INTERFACE_VERSION: u32 = 0x5b00;
 /// For the full list of values see
 /// <https://github.com/torvalds/linux/blob/b6839ef26e549de68c10359d45163b0cfb031183/arch/x86/include/uapi/asm/bootparam.h#L151-L198>
 #[expect(missing_docs)]
+#[deprecated]
 pub mod fc {
     pub const LINUX_KERNEL_BOOT_FLAG_MAGIC: u16 = 0xaa55;
     pub const LINUX_KERNEL_HRD_MAGIC: u32 = 0x53726448;
