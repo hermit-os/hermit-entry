@@ -8,7 +8,12 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
+extern crate alloc;
+
 pub mod boot_info;
+
+#[cfg(feature = "config")]
+pub mod config;
 
 #[cfg(feature = "loader")]
 pub mod elf;
@@ -182,6 +187,49 @@ impl fmt::Display for UhyveIfVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
+}
+
+/// Takes a compressed Hermit image as input and if successful,
+/// returns the decompressed image (which is expected to be a `tar` ball).
+///
+/// We assume that all images are gzip-compressed.
+#[cfg(feature = "loader")]
+pub fn decompress_image(
+    data: &[u8],
+) -> Result<alloc::boxed::Box<[u8]>, compression::prelude::CompressionError> {
+    use compression::prelude::{DecodeExt as _, GZipDecoder};
+
+    data.iter()
+        .copied()
+        .decode(&mut GZipDecoder::new())
+        .collect::<Result<alloc::boxed::Box<[u8]>, _>>()
+}
+
+/// Takes a compressed Hermit image as input and if successful,
+/// returns the decompressed image (which is expected to be a `tar` ball).
+///
+/// We assume that all images are gzip-compressed.
+///
+/// This version supports supplying an allocator
+/// (to be used instead of the [`Global`](allocator_api2::alloc::Global) default allocator).
+#[cfg(all(feature = "allocator-api2", feature = "loader"))]
+pub fn decompress_image_with_allocator<A: allocator_api2::alloc::Allocator>(
+    data: &[u8],
+    alloc: A,
+) -> Result<allocator_api2::boxed::Box<[u8], A>, compression::prelude::CompressionError> {
+    use allocator_api2 as alloca2;
+    use compression::prelude::{DecodeExt as _, GZipDecoder};
+
+    // we don't know the final capacity,
+    // but the actual length usually won't be smaller than the input
+    let mut ret = alloca2::vec::Vec::with_capacity_in(data.len(), alloc);
+
+    for i in data.iter().copied().decode(&mut GZipDecoder::new()) {
+        let i = i?;
+        ret.push(i);
+    }
+
+    Ok(ret.into_boxed_slice())
 }
 
 #[cfg(test)]
