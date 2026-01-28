@@ -20,7 +20,7 @@ targets = [
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-align-address = "0.3"
+align-address = "0.4"
 byte-unit = { version = "5", optional = true, default-features = false, features = ["byte", "serde"] }
 const_parse = "1"
 goblin = { version = "0.10", optional = true, default-features = false, features = ["elf64"] }
