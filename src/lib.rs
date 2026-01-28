@@ -8,7 +8,13 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
+#[cfg(feature = "loader")]
+extern crate alloc;
+
 pub mod boot_info;
+
+#[cfg(feature = "loader")]
+pub mod config;
 
 #[cfg(feature = "loader")]
 pub mod elf;
