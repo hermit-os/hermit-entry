@@ -6,9 +6,6 @@ use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use core::fmt;
 
-/// The default configuration file name, relative to the image root.
-const DEFAULT_CONFIG_NAME: &str = "hermit.toml";
-
 /// The possible errors which the parser might emit.
 type ParserError = toml::de::Error;
 
@@ -31,6 +28,11 @@ pub enum Config<'a> {
         #[serde(borrow)]
         kernel: Cow<'a, str>,
     },
+}
+
+impl Config<'_> {
+    /// The default configuration file name, relative to the image root.
+    pub const DEFAULT_PATH: &'static str = "hermit.toml";
 }
 
 /// Input parameter for the kernel and application
@@ -160,7 +162,8 @@ pub fn parse_tar(image: &[u8]) -> Result<ConfigHandle<'_>, ParseTarError> {
         Ok(ret)
     }
 
-    let config_slice = lookup_in_image(&taref, DEFAULT_CONFIG_NAME)?.ok_or(Error::ConfigResolve)?;
+    let config_slice =
+        lookup_in_image(&taref, Config::DEFAULT_PATH)?.ok_or(Error::ConfigResolve)?;
     let config_slice = core::str::from_utf8(config_slice).map_err(Error::ConfigUtf8Error)?;
     let config: Config<'_> = toml::from_str(config_slice).map_err(Error::ConfigTomlParseError)?;
 
