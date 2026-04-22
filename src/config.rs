@@ -146,7 +146,7 @@ pub fn parse_tar(image: &[u8]) -> Result<ConfigHandle<'_>, ParseTarError> {
             if f.len() >= 256 {
                 return Ok(None);
             }
-            tmp.copy_from_slice(f);
+            tmp[..f.len()].copy_from_slice(f);
             tar_no_std::TarFormatString::new(tmp)
         };
 
