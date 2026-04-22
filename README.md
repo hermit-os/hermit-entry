@@ -30,7 +30,7 @@ Overall, these are just `.tar.gz` (i.e. gzipped tar) files.
 
 They contain at least 2 special entries:
 * The config file (in TOML format), at `hermit.toml` in the image root.
-  The expected entries are described in the crate documentation in `hermit_entry::config::Config` (requires enabling the `config` feature).
+  The expected entries are described in the crate documentation in `hermit_entry::config::Config` (requires enabling the `loader` feature).
 * A Hermit Kernel ELF file, whose path is specified in the config.
 
 All subdirectories of the image itself are mapped
