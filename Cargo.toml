@@ -31,10 +31,17 @@ tar-no-std = { version = "0.4", optional = true, features = ["alloc"] }
 time = { version = "0.3", default-features = false }
 toml = { version = "1", optional = true, default-features = false, features = ["parse", "serde"] }
 
+[target.'cfg(not(target_os = "none"))'.dev-dependencies]
+tar = { version = "0.4", default-features = false }
+
 [features]
 default = []
 loader = ["dep:byte-unit", "dep:log", "dep:goblin", "dep:plain", "dep:serde", "dep:tar-no-std", "dep:toml"]
 kernel = []
+
+[[test]]
+name = "config"
+required-features = ["loader"]
 
 [[test]]
 name = "macros"
