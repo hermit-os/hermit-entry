@@ -81,7 +81,7 @@ dependencies = [
 
 [[package]]
 name = "hermit-entry"
-version = "0.10.9"
+version = "0.10.10"
 dependencies = [
  "align-address",
  "byte-unit",
