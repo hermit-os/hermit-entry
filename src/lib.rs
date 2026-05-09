@@ -96,6 +96,17 @@ pub struct HermitVersion {
     pub patch: u32,
 }
 
+impl HermitVersion {
+    /// Creates a new Hermit version struct.
+    pub const fn new(major: u32, minor: u32, patch: u32) -> Self {
+        Self {
+            major,
+            minor,
+            patch,
+        }
+    }
+}
+
 impl fmt::Display for HermitVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self {
@@ -145,16 +156,8 @@ mod tests {
 
     #[test]
     fn cmp_hermit_version() {
-        let small = HermitVersion {
-            major: 0,
-            minor: 1,
-            patch: 2,
-        };
-        let big = HermitVersion {
-            major: 2,
-            minor: 1,
-            patch: 0,
-        };
+        let small = HermitVersion::new(0, 1, 2);
+        let big = HermitVersion::new(2, 1, 0);
 
         assert!(small < big);
         assert!(small == small);
@@ -165,23 +168,9 @@ mod tests {
     #[test]
     fn parse_hermit_version() {
         let version = HermitVersion::from_str("0.1.2").unwrap();
-        assert_eq!(
-            version,
-            HermitVersion {
-                major: 0,
-                minor: 1,
-                patch: 2,
-            }
-        );
+        assert_eq!(version, HermitVersion::new(0, 1, 2));
 
         let version = HermitVersion::from_str("2.1.0").unwrap();
-        assert_eq!(
-            version,
-            HermitVersion {
-                major: 2,
-                minor: 1,
-                patch: 0,
-            }
-        );
+        assert_eq!(version, HermitVersion::new(2, 1, 0));
     }
 }
