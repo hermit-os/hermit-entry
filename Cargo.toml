@@ -36,7 +36,15 @@ tar = { version = "0.4", default-features = false }
 
 [features]
 default = []
-loader = ["dep:byte-unit", "dep:log", "dep:goblin", "dep:plain", "dep:serde", "dep:tar-no-std", "dep:toml"]
+loader = [
+    "dep:byte-unit",
+    "dep:log",
+    "dep:goblin",
+    "dep:plain",
+    "dep:serde",
+    "dep:tar-no-std",
+    "dep:toml",
+]
 kernel = []
 
 [[test]]
