@@ -1,6 +1,8 @@
 //! Parsing and loading kernel objects from ELF files.
 
+use alloc::vec::Vec;
 use core::mem::{self, MaybeUninit};
+use core::ops::Range;
 use core::{fmt, str};
 
 use align_address::Align;
@@ -419,15 +421,13 @@ impl KernelObject<'_> {
         // Load program segments
         // Contains TLS initialization image
         let load_start_addr = self.start_addr().unwrap_or_default();
-        self.phs
+        let segments = self
+            .phs
             .iter()
             .filter(|ph| ph.p_type == program_header::PT_LOAD)
-            .for_each(|ph| {
-                let ph_memory = {
-                    let mem_start = (ph.p_vaddr - load_start_addr) as usize;
-                    let mem_len = ph.p_memsz as usize;
-                    &mut memory[mem_start..][..mem_len]
-                };
+            .map(|ph| {
+                let mem_start = ph.p_vaddr - load_start_addr;
+                let ph_memory = &mut memory[mem_start as usize..][..ph.p_memsz as usize];
                 let file_len = ph.p_filesz as usize;
                 let ph_file = &self.elf[ph.p_offset as usize..][..file_len];
                 // FIXME: Replace with `maybe_uninit_write_slice` once stable
@@ -436,7 +436,15 @@ impl KernelObject<'_> {
                 for byte in &mut ph_memory[file_len..] {
                     byte.write(0);
                 }
-            });
+
+                let segment_start = start_addr + mem_start;
+                LoadableSegment {
+                    addr_range: segment_start..segment_start + ph.p_memsz,
+                    writable: ph.p_flags & program_header::PF_W != 0,
+                    executable: ph.p_flags & program_header::PF_X != 0,
+                }
+            })
+            .collect();
 
         if self.is_relocatable() {
             // Perform relocations
@@ -516,16 +524,37 @@ impl KernelObject<'_> {
                 tls_info,
             },
             entry_point: self.entry_point(start_addr),
+            segments,
         }
     }
 }
 
+/// A loadable kernel segment at its final guest address.
+///
+/// Segments are not page-aligned, and adjacent segments may share a page.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct LoadableSegment {
+    /// The guest address range covered by the segment in memory.
+    pub addr_range: Range<u64>,
+
+    /// Whether the segment is writable.
+    pub writable: bool,
+
+    /// Whether the segment is executable.
+    pub executable: bool,
+}
+
 /// Load information required by the loader.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct LoadedKernel {
     /// Load information required by the kernel.
     pub load_info: LoadInfo,
 
     /// The kernel's entry point.
     pub entry_point: u64,
+
+    /// The kernel's loadable segments, in program header order.
+    pub segments: Vec<LoadableSegment>,
 }
